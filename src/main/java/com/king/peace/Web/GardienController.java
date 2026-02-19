@@ -32,6 +32,7 @@ import com.king.peace.ImplementServices.*;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/gardiens")
@@ -260,9 +261,10 @@ public class GardienController {
     public ResponseEntity<?> createPointage(@RequestBody PointageDto pointageDto) {
         try {
 
-
             pointagerepo.savePointage(pointageDto);
-            return ResponseEntity.ok("Pointage enregistré");
+
+             // renvoyer un objet JSON au lieu d'une simple chaîne
+        return ResponseEntity.ok(Map.of("message", "Pointage enregistré"));
         } catch (Exception e) {
             return ResponseEntity.status(500).body("Erreur lors de l'enregistrement");
         }

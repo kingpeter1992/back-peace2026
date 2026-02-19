@@ -49,7 +49,7 @@ public ResponseEntity<List<ClientDto>> getAllClients() {
     List<ClientDto> dtos = clients.stream()
         .map(c -> new ClientDto(c.getId(), c.getNom(), c.getAdresse(),
                                c.getContact(), c.getContact2(), c.getEmail(),
-                               c.getTypeClient()))
+                               c.getTypeClient(),c.isActif()))
         .collect(Collectors.toList());
     return ResponseEntity.ok(dtos);
 }

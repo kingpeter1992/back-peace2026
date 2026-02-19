@@ -1,6 +1,7 @@
 package com.king.peace.ImplementServices;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.stereotype.Service;
 
@@ -32,6 +33,7 @@ public class ClientService {
     client.setContact(client.getContact().toUpperCase());
     client.setContact2(client.getContact2().toUpperCase());
     client.setEmail(client.getEmail().toUpperCase());
+    client.setActif(true);
 
         return clientRepository.save(client);
     }
@@ -73,7 +75,8 @@ public class ClientService {
         saved.getContact(),
         saved.getContact2(),
         saved.getEmail(),
-        saved.getTypeClient()
+        saved.getTypeClient(),
+        saved.isActif()
     );
 }
 
@@ -108,6 +111,11 @@ public class ClientService {
         Client client = clientRepository.findById(clientId)
                 .orElseThrow(() -> new RuntimeException("Client introuvable"));
         return factureRepository.findByClient(client);
+    }
+
+    public Optional<Facture> findById(Long clientId) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'findById'");
     }
 
 }

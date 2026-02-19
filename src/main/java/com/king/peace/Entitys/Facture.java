@@ -2,12 +2,16 @@ package com.king.peace.Entitys;
 
 import java.time.LocalDate;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToOne;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -24,6 +28,8 @@ public class Facture {
     private Long id;
     private LocalDate dateEmission;
     private double montantTotal;
+    @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
     private StatutFacture statut;
     private String description;
     private String refFacture;
@@ -31,9 +37,16 @@ public class Facture {
     private double montantParGardien; // <-- attention au nom exact !
     private double nombreJours;
     private Devise devise;
+      private double remise = 0.0; // remise appliquée
+    private String commentaire;  // notes ou commentaire utilisateur
     @ManyToOne
     private Client client;
     @ManyToOne
     @JoinColumn(name = "contrats_id")
     private Contrats contrats;
+  private Integer heureFacturation;
+  private LocalDate dateCycle;
+     @OneToOne
+    @JoinColumn(name = "facture_origine_id")
+    private Facture factureOrigine; // pour les avoirs
 }

@@ -100,6 +100,8 @@ public class AffectationService {
             .gardien(gardien)
             .contrat(contrat)
             .dateAffectation(LocalDate.now())
+            .dateDebut(contrat.getDateDebut())
+            .dateFin(contrat.getDateFin())
             .statut(dto.getStatut() != null ? dto.getStatut() : StatutAffectation.ACTIVE)
             .description(dto.getDescription())
             .active(true)
@@ -138,6 +140,9 @@ public class AffectationService {
         a.setDescription(dto.getDescription());
         a.setStatut(dto.getStatut());
         a.setActive(dto.isActive());
+        a.setDateDebut(dto.getDateDebut());
+        a.setDateFin(dto.getDateFin());
+
 
         Affectation saved = affectationRepository.save(a);
 
@@ -149,6 +154,7 @@ public class AffectationService {
                 .contratId(saved.getContrat().getId())
                 .statut(saved.getStatut())
                 .dateAffectation(saved.getDateAffectation())
+
                 .description(saved.getDescription())
                 .active(saved.isActive())
                 .refContrats(saved.getContrat().getRefContrats())

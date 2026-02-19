@@ -25,6 +25,8 @@ public class Client {
     private String contact2;
     private String email;
     private String typeClient;
+    private boolean actif = true;
+
 
     @OneToMany(mappedBy = "client", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Contrats> contrats;

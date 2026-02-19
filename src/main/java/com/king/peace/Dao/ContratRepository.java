@@ -8,13 +8,16 @@ import org.springframework.stereotype.Repository;
 
 import com.king.peace.Entitys.Client;
 import com.king.peace.Entitys.Contrats;
+import com.king.peace.Entitys.StatutGardien;
 
 @Repository
 public interface ContratRepository extends  JpaRepository<Contrats,Long>{
 
     List<Contrats> findByClient(Client client);
+    List<Contrats> findByStatut(StatutGardien statut);
 
 // Récupère tous les contrats actifs dont la dateDebut <= start et dateFin >= end
     List<Contrats> findByActiveTrueAndDateDebutBeforeAndDateFinAfter(LocalDate start, LocalDate end);
+    List<Contrats> findByActiveTrue();
     
 }

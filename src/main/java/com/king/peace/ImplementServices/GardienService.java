@@ -25,6 +25,7 @@ import com.king.peace.Entitys.Affectation;
 import com.king.peace.Entitys.Contrats;
 import com.king.peace.Entitys.Gardien;
 import com.king.peace.Entitys.GardienPhoto;
+import com.king.peace.Entitys.Plaintes;
 import com.king.peace.Entitys.Pointage;
 import com.king.peace.Entitys.StatutAffectation;
 import com.king.peace.Entitys.StatutGardien;
@@ -318,20 +319,11 @@ List<AgentFinanceHistoryDto> paiements = agentFinanceHistoryRepository
     /* =======================
        REGLEMENTS / SANCTIONS
      ======================= */
-    List<PlainteDto> reglements = plainteRepository
-            .findByGardien_Id(g.getId())
-            .stream()
-            .map(r -> new PlainteDto(
-                    r.getId(),
-                    r.getDatePlaite(),
-                    r.getDescription(),
-                    r.getResponse(),
-                    r.getDateRespnse(),
-                    r.getStatut(),
-                    r.getCreatedAt()
-
-            ))
-            .toList();
+    List<PlainteDto> plaintes = plainteRepository
+        .findByGardien_Id(g.getId())
+        .stream()
+        .map(this::mapToDto)
+        .toList();
 
 
     /* =======================
@@ -341,7 +333,7 @@ List<AgentFinanceHistoryDto> paiements = agentFinanceHistoryRepository
     detailsDto.setGardien(dto);
     detailsDto.setPaiements(paiements);
     detailsDto.setPresences(presences);
-    detailsDto.setPlainte(reglements);
+    detailsDto.setPlainte(plaintes);
     detailsDto.setPhotos(photoBase64);
 
     return detailsDto;
@@ -357,5 +349,27 @@ List<AgentFinanceHistoryDto> paiements = agentFinanceHistoryRepository
         return stats;
     }
 
+private PlainteDto mapToDto(Plaintes p) {
+
+    PlainteDto dto = new PlainteDto();
+
+    dto.setId(p.getId());
+    dto.setDescription(p.getDescription());
+    dto.setDatePlainte(p.getDatePlainte());
+    dto.setStatut(p.getStatut());
+    dto.setNote(p.getNote());
+    dto.setNiveau(p.getNiveau());
+    dto.setDateLimiteReponse(p.getDateLimiteReponse());
+    dto.setReponseGardien(p.getReponseGardien());
+    dto.setRepondu(p.isRepondu());
+
+    dto.setGardienId(p.getGardien().getId());
+    dto.setClientId(p.getClient().getId());
+
+    dto.setGardienNom(p.getGardien().getNom());
+    dto.setClientNom(p.getClient().getNom());
+
+    return dto;
+}
 
 }

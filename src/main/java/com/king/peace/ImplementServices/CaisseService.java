@@ -10,10 +10,10 @@ import org.springframework.stereotype.Service;
 
 import com.king.peace.Dao.CaisseRepository;
 import com.king.peace.Dao.ClientRepository;
+import com.king.peace.Dao.CustomerFinanceHistoryRepository;
 import com.king.peace.Dao.FactureRepository;
 import com.king.peace.Dao.GardienRepository;
 import com.king.peace.Dao.RepositoryAgentFinanceHistory;
-import com.king.peace.Dao.RepositoryCustomerFinanceHistory;
 import com.king.peace.Dao.TransactionCaisseRepository;
 import com.king.peace.Dto.CustomerFinanceHistoryDto;
 import com.king.peace.Dto.DecaissementAgentDTO;
@@ -45,7 +45,7 @@ public class CaisseService {
     private final TransactionCaisseRepository transactionRepository;
     private final GardienRepository gardienRepository;
     private final RepositoryAgentFinanceHistory agentFinanceHistoryRepository;
-    private final RepositoryCustomerFinanceHistory customerFinanceHistoryRepository;
+    private final CustomerFinanceHistoryRepository customerFinanceHistoryRepository;
     private final ClientRepository clientRepository;
     private final FactureRepository factureRepository;
     

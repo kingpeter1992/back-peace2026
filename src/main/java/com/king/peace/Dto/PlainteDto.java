@@ -1,33 +1,39 @@
 package com.king.peace.Dto;
 
 import java.time.LocalDate;
+import java.util.List;
 
+import com.king.peace.Entitys.NiveauPlainte;
+import com.king.peace.Entitys.ReponsePlainte;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 
 @Setter
 @Getter
+@NoArgsConstructor  @AllArgsConstructor @Builder
 public class PlainteDto {
-    public PlainteDto(Long id2, LocalDate datePlaite2, String description2, String response2, LocalDate dateRespnse2,
-			String statut2, LocalDate createdAt2) {
-                this.id=id2;
-                this.datePlaite=datePlaite2;
-                this.description=description2;
-                this.response=response2;
-                this.dateRespnse=dateRespnse2;
-                this.statut=statut2;
-                this.createdAt=createdAt2;
-            }
-            public PlainteDto() {   
-            }
-	private Long id;
-    private LocalDate datePlaite;
+  
+private Long id;
     private String description;
-    private String response;
-    private LocalDate dateRespnse;
+    private LocalDate datePlainte;
     private String statut;
-    private LocalDate createdAt;
+    private Integer note;
+    private String gardienNom;
+    private String clientNom;
+    private NiveauPlainte niveau;
+    private LocalDate dateLimiteReponse;
+    private String reponseGardien;
+    private boolean repondu;
+    private Long clientId;
+    private Long gardienId;
+    private boolean active;
+    private List<ReponseDto> listeReponses;
+
 
     
 }

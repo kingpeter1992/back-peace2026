@@ -14,4 +14,5 @@ public class ClientDto {
     private String contact2;
     private String email;
     private String typeClient;
+    private boolean actif;
 }
