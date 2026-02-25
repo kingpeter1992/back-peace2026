@@ -9,11 +9,9 @@ import org.springframework.stereotype.Component;
 
 import com.king.peace.Dao.ClientRepository;
 import com.king.peace.Dao.ContratRepository;
-import com.king.peace.Dao.CustomerFinanceHistoryRepository;
 import com.king.peace.Dao.FactureRepository;
 import com.king.peace.Entitys.Client;
 import com.king.peace.Entitys.Contrats;
-import com.king.peace.Entitys.CustomerFinanceHistory;
 import com.king.peace.Entitys.Facture;
 import com.king.peace.Entitys.StatutFacture;
 import com.king.peace.ImplementServices.FacturationService;
@@ -29,7 +27,6 @@ public class FacturationScheduler {
     private final FactureRepository factureRepository;
     private final ContratRepository contratRepository;
     private final ClientRepository clientRepository;
-    private final CustomerFinanceHistoryRepository historyRepository;
 
      /**
      * Scheduler automatique : génère une facture pour chaque contrat actif.

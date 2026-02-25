@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.king.peace.Dao.FactureRepository;
+import com.king.peace.Dto.AvoirRequest;
 import com.king.peace.Dto.FactureDTO;
 import com.king.peace.Dto.UpdateFactureRequest;
 import com.king.peace.Entitys.Facture;
@@ -60,6 +61,7 @@ public class FactureController {
                 .montantTotal(facture.getMontantTotal())
                 .statut(facture.getStatut().name())
                 .description(facture.getDescription())
+                .dateCycle(facture.getDateCycle())
                 .refFacture(facture.getRefFacture())
                 .nombreGardiens(facture.getNombreGardiens())
                 .montantParGardien(facture.getMontantParGardien())
@@ -67,6 +69,7 @@ public class FactureController {
                 .devise(facture.getDevise().name())
                 .clientId(facture.getClient().getId())
                 .contratId(facture.getContrats().getId())
+                .motifAvoir(facture.getMotifAvoir())
                 .build();
     }
 
@@ -100,5 +103,21 @@ public List<Map<String, Object>> monthly(
 ) {
   return factureService.monthlyStats(dateFrom, dateTo, clientId);
 }
+
+
+@PostMapping("/avoir")
+public ResponseEntity<?> creerAvoirParRef(@RequestBody FactureDTO req) {
+    FactureDTO avoir = factureService.createAvoir(req.getFactureOrigineId(), req);
+    return ResponseEntity.ok(avoir);
+}
+
+
+@PutMapping("/factures/{id}/paid")
+public ResponseEntity<?> payerFacture(@PathVariable Long id,
+                                      @RequestBody FactureDTO dto) {
+    factureService.payerFacture(id, dto.getMontantTotal());
+    return ResponseEntity.ok().build();
+}
+
 
 }

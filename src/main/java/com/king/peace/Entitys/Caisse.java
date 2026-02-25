@@ -29,7 +29,7 @@ public class Caisse {
 
     private String description;
 
-    @OneToMany(mappedBy = "caisse")
-    private List<TransactionCaisse> transactions;
+    // @OneToMany(mappedBy = "caisse")
+    // private List<TransactionCaisse> transactions;
 
 }

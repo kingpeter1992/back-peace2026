@@ -9,8 +9,10 @@ import lombok.Setter;
 @Getter
 public class GardienDetailsDto {
      private GardienDto gardien;
-    private List<AgentFinanceHistoryDto> paiements;
+    private List<TransactionCaisseDto> paiements;
     private List<PresenceDto> presences;
     private List<PlainteDto> plainte;
     private List<String> photos; // Base64 de toutes les photos
+    private GardienStatsDto stats;
+
 }

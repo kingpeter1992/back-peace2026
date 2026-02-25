@@ -1,12 +1,15 @@
 package com.king.peace.Web;
 
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import com.king.peace.Dto.ClientDetailsDto;
 import com.king.peace.Dto.ClientDto;
 import com.king.peace.Entitys.Client;
 import com.king.peace.Entitys.Contrats;
@@ -22,6 +25,7 @@ import lombok.RequiredArgsConstructor;
 public class ClientController {
 
     private final ClientService clientService;
+
 
     // Créer un nouveau client
     @PostMapping("/create")
@@ -71,4 +75,17 @@ public ResponseEntity<List<ClientDto>> getAllClients() {
     public ResponseEntity<List<Facture>> getFacturesByClient(@PathVariable Long id) {
         return ResponseEntity.ok(clientService.getFacturesClient(id));
     }
+
+@GetMapping("/{clientId}/details")
+public ResponseEntity<ClientDetailsDto> details(@PathVariable Long clientId,
+        @RequestParam LocalDate dateFrom,
+        @RequestParam LocalDate dateTo
+) {
+
+    ClientDetailsDto dto = clientService.getClientDetails(clientId,
+        dateFrom,dateTo
+    );
+
+    return ResponseEntity.ok(dto);
+}
 }

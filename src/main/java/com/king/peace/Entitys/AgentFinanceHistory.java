@@ -1,11 +1,13 @@
 package com.king.peace.Entitys;
 
+import java.math.BigDecimal;
 import java.sql.Date;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 import org.aspectj.weaver.loadtime.Agent;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -28,8 +30,10 @@ public class AgentFinanceHistory {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private String type; // SALAIRE, AVANCE, PRET
-    private Double montant;
+      private double montant;
     private LocalDateTime date;
+    private Devise devise;
+
 
     @ManyToOne
     @JoinColumn(name = "gardien_id")

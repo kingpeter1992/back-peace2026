@@ -1,8 +1,10 @@
 package com.king.peace.ImplementServices;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Base64;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
@@ -15,22 +17,30 @@ import com.king.peace.Dao.PlainteRepository;
 import com.king.peace.Dao.PointageRepository;
 import com.king.peace.Dao.RepositoryAgentFinanceHistory;
 import com.king.peace.Dao.TauxJournalierRepository;
+import com.king.peace.Dao.TransactionCaisseRepository;
 import com.king.peace.Dto.AgentFinanceHistoryDto;
 import com.king.peace.Dto.GardienDetailsDto;
 import com.king.peace.Dto.GardienDto;
 import com.king.peace.Dto.GardienStatsDto;
 import com.king.peace.Dto.PlainteDto;
 import com.king.peace.Dto.PresenceDto;
+import com.king.peace.Dto.ReponseDto;
+import com.king.peace.Dto.TransactionCaisseDto;
 import com.king.peace.Entitys.Affectation;
 import com.king.peace.Entitys.Contrats;
 import com.king.peace.Entitys.Gardien;
 import com.king.peace.Entitys.GardienPhoto;
 import com.king.peace.Entitys.Plaintes;
 import com.king.peace.Entitys.Pointage;
+import com.king.peace.Entitys.ReponsePlainte;
 import com.king.peace.Entitys.StatutAffectation;
 import com.king.peace.Entitys.StatutGardien;
 import com.king.peace.Entitys.StatutPointage;
 import com.king.peace.Entitys.TauxJournalier;
+import com.king.peace.Entitys.TransactionCaisse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import org.springframework.transaction.annotation.Transactional;
 
 import lombok.RequiredArgsConstructor;
@@ -39,16 +49,16 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 @Transactional
 public class GardienService {
-     private final GardienRepository gardienRepository;
+    private final GardienRepository gardienRepository;
     private final AffectationRepository affectationRepository;
     private final PointageRepository pointageRepository;
     private final TauxJournalierRepository tauxJournalierRepository;
     private final GardienPhotoRepository gardienPhotoRepository;
     private final PlainteRepository plainteRepository;
-    private final RepositoryAgentFinanceHistory agentFinanceHistoryRepository;
     private final TauxJournalierRepository tauxChangeRepository;
+    private final TransactionCaisseRepository repoTrasanction;
 
-
+    private static final Logger log = LoggerFactory.getLogger(GardienService.class);
 
     // ==============================
     // CRUD GARDIEN
@@ -66,13 +76,11 @@ public class GardienService {
         existing.setStatut(existing.getStatut());
         existing.setDateEmbauche(existing.getDateEmbauche());
 
-                if (existing.getStatut().equals(StatutGardien.ACTIF)) {
-                    existing.setActif(true);
-                } else {
-                    existing.setActif(false);
-                }
-
-
+        if (existing.getStatut().equals(StatutGardien.ACTIF)) {
+            existing.setActif(true);
+        } else {
+            existing.setActif(false);
+        }
 
         return gardienRepository.save(existing);
     }
@@ -149,13 +157,12 @@ public class GardienService {
     // ==============================
     // TAUX JOURNALIER
     // ==============================
-      public double getDernierTaux() {
-    return tauxChangeRepository
-            .findTopByOrderByDateDesc()
-            .map(TauxJournalier::getTaux)
-            .orElse(1.0); // sécurité
-}
-
+    public double getDernierTaux() {
+        return tauxChangeRepository
+                .findTopByOrderByDateDesc()
+                .map(TauxJournalier::getTaux)
+                .orElse(1.0); // sécurité
+    }
 
     public TauxJournalier getTauxJournalier() {
         return tauxJournalierRepository.findTopByOrderByDateDesc()
@@ -163,72 +170,69 @@ public class GardienService {
     }
 
     public void supprimerGardien(Long gardienId) {
-    Gardien gardien = findById(gardienId);
+        Gardien gardien = findById(gardienId);
 
-    // Vérifier si le gardien a des affectations
-    boolean aAffectation = affectationRepository.existsByGardienId(gardienId);
-    
-    // Vérifier si le gardien a des transactions (paiements, avances, etc.)
+        // Vérifier si le gardien a des affectations
+        boolean aAffectation = affectationRepository.existsByGardienId(gardienId);
 
+        // Vérifier si le gardien a des transactions (paiements, avances, etc.)
 
-    if (aAffectation ) {
-        throw new RuntimeException("Impossible de supprimer ce gardien : il a des affectations ou des transactions. Vous pouvez le bloquer.");
-    }
-
-    gardienRepository.delete(gardien);
-}
-
-public Gardien bloquerGardien(Long gardienId) {
-    Gardien gardien = findById(gardienId);
-    gardien.setStatut(StatutGardien.BLOQUE); // StatutGardien peut être ACTIF / INACTIF / BLOQUE
-    return gardienRepository.save(gardien);
-}
-
-
-
-public List<GardienDto> findAllWithPhoto() {
-
-    List<Gardien> gardiens = gardienRepository.findAll();
-
-    List<GardienDto> dtos = new ArrayList<>();
-    for (Gardien g : gardiens) {
-
-        // Récupère la première photo du gardien s’il existe
-        GardienPhoto photo = gardienPhotoRepository.findFirstByGardienId(g.getId());
-
-        GardienDto dto = new GardienDto();
-
-        dto.setId(g.getId());
-        dto.setNom(g.getNom());
-        dto.setPrenom(g.getPrenom());
-        dto.setTelephone1(g.getTelephone1());
-        dto.setTelephone2(g.getTelephone2());
-        dto.setFonction(g.getFonction());
-        dto.setSalaire(g.getSalaire());
-        dto.setSalaireBase(g.getSalaireBase());
-        dto.setAdresse(g.getAdresse());
-        dto.setGenre(g.getGenre());
-        dto.setDateEmbauche(g.getDateEmbauche());
-        dto.setEmail(g.getEmail());
-        dto.setDateNaissance(g.getDateNaissance());
-        dto.setCreatedAt(g.getCreatedAt());
-        dto.setDevise(g.getDevise());
-        dto.setStatut(g.getStatut());
-
-        if (photo != null && photo.getPhoto() != null) {
-            dto.setPhotoBase64(Base64.getEncoder().encodeToString(photo.getPhoto()));
-        } else {
-            dto.setPhotoBase64(null);
+        if (aAffectation) {
+            throw new RuntimeException(
+                    "Impossible de supprimer ce gardien : il a des affectations ou des transactions. Vous pouvez le bloquer.");
         }
 
-        dtos.add(dto);
+        gardienRepository.delete(gardien);
     }
 
-    return dtos;
-}
+    public Gardien bloquerGardien(Long gardienId) {
+        Gardien gardien = findById(gardienId);
+        gardien.setStatut(StatutGardien.BLOQUE); // StatutGardien peut être ACTIF / INACTIF / BLOQUE
+        return gardienRepository.save(gardien);
+    }
 
+    public List<GardienDto> findAllWithPhoto() {
 
- public GardienStatsDto getStats() {
+        List<Gardien> gardiens = gardienRepository.findAll();
+
+        List<GardienDto> dtos = new ArrayList<>();
+        for (Gardien g : gardiens) {
+
+            // Récupère la première photo du gardien s’il existe
+            GardienPhoto photo = gardienPhotoRepository.findFirstByGardienId(g.getId());
+
+            GardienDto dto = new GardienDto();
+
+            dto.setId(g.getId());
+            dto.setNom(g.getNom());
+            dto.setPrenom(g.getPrenom());
+            dto.setTelephone1(g.getTelephone1());
+            dto.setTelephone2(g.getTelephone2());
+            dto.setFonction(g.getFonction());
+            dto.setSalaire(g.getSalaire());
+            dto.setSalaireBase(g.getSalaireBase());
+            dto.setAdresse(g.getAdresse());
+            dto.setGenre(g.getGenre());
+            dto.setDateEmbauche(g.getDateEmbauche());
+            dto.setEmail(g.getEmail());
+            dto.setDateNaissance(g.getDateNaissance());
+            dto.setCreatedAt(g.getCreatedAt());
+            dto.setDevise(g.getDevise());
+            dto.setStatut(g.getStatut());
+
+            if (photo != null && photo.getPhoto() != null) {
+                dto.setPhotoBase64(Base64.getEncoder().encodeToString(photo.getPhoto()));
+            } else {
+                dto.setPhotoBase64(null);
+            }
+
+            dtos.add(dto);
+        }
+
+        return dtos;
+    }
+
+    public GardienStatsDto getStats() {
         GardienStatsDto stats = new GardienStatsDto();
         stats.setTotalGardiens(gardienRepository.count());
         stats.setActifs(gardienRepository.countByStatut(StatutGardien.ACTIF));
@@ -237,109 +241,159 @@ public List<GardienDto> findAllWithPhoto() {
         return stats;
     }
 
-public GardienDetailsDto getGardienDetails(Long id) {
+    public GardienDetailsDto getGardienDetails(Long id,
+            LocalDate dateFrom,
+            LocalDate dateTo) {
 
-    Gardien g = gardienRepository.findById(id)
-            .orElseThrow(() -> new RuntimeException("Gardien non trouvé"));
+        try {
 
-    /* =======================
-       INFOS GARDIEN
-     ======================= */
-    GardienDto dto = new GardienDto();
-       dto.setId(g.getId());
-        dto.setNom(g.getNom());
-        dto.setPrenom(g.getPrenom());
-        dto.setTelephone1(g.getTelephone1());
-        dto.setTelephone2(g.getTelephone2());
-        dto.setFonction(g.getFonction());
-        dto.setSalaire(g.getSalaire());
-        dto.setSalaireBase(g.getSalaireBase());
-        dto.setAdresse(g.getAdresse());
-        dto.setGenre(g.getGenre());
-        dto.setDateEmbauche(g.getDateEmbauche());
-        dto.setEmail(g.getEmail());
-        dto.setDateNaissance(g.getDateNaissance());
-        dto.setCreatedAt(g.getCreatedAt());
-        dto.setDevise(g.getDevise());
-        dto.setStatut(g.getStatut());
+            log.info("🔵 START getGardienDetails id={}", id);
 
+            LocalDateTime from = dateFrom.atStartOfDay();
+            LocalDateTime to = dateTo.atTime(23, 59, 59);
 
-    /* =======================
-       PHOTO
-     ======================= */
-    List<GardienPhoto> photos = gardienPhotoRepository.findAllByGardienId(g.getId());
-    List<String> photoBase64 = photos.stream()
-            .map(p -> Base64.getEncoder().encodeToString(p.getPhoto()))
-            .toList();
+            /*
+             * =======================
+             * GARDIEN
+             * =======================
+             */
+            log.info("1️⃣ Chargement gardien...");
+            Gardien g = gardienRepository.findById(id)
+                    .orElseThrow(() -> new RuntimeException("Gardien non trouvé"));
+            /* ======================= INFOS GARDIEN ======================= */
+            GardienDto dto = new GardienDto();
+            dto.setId(g.getId());
+            dto.setNom(g.getNom());
+            dto.setPrenom(g.getPrenom());
+            dto.setTelephone1(g.getTelephone1());
+            dto.setTelephone2(g.getTelephone2());
+            dto.setFonction(g.getFonction());
+            dto.setSalaire(g.getSalaire());
+            dto.setSalaireBase(g.getSalaireBase());
+            dto.setAdresse(g.getAdresse());
+            dto.setGenre(g.getGenre());
+            dto.setDateEmbauche(g.getDateEmbauche());
+            dto.setEmail(g.getEmail());
+            dto.setDateNaissance(g.getDateNaissance());
+            dto.setCreatedAt(g.getCreatedAt());
+            dto.setDevise(g.getDevise());
+            dto.setStatut(g.getStatut());
 
-    dto.setPhotoBase64(photoBase64.isEmpty() ? null : photoBase64.get(0));
+            log.info("✅ Gardien OK");
 
-    /* =======================
-       HISTORIQUE FINANCE AGENT
-     ======================= */
-List<AgentFinanceHistoryDto> paiements = agentFinanceHistoryRepository
-        .findByGardien_Id(g.getId())
-        .stream()
-        .map(h -> new AgentFinanceHistoryDto(
-                h.getId(),
-                h.getType(),
-                h.getMontant(),
-                h.getDate(),
-                new GardienDto(
-                        g.getId(),
-                        g.getNom(),
-                        g.getPrenom(),
-                        g.getFonction(),
-                        g.getSalaireBase(),
-                        g.getStatut()
-                ),
-                h.getTransactionCaisse()
-        ))
-        .toList();
+            /*
+             * =======================
+             * PHOTOS
+             * =======================
+             */
+            log.info("2️⃣ Chargement photos...");
+            /* ======================= PHOTO ======================= */
+            List<GardienPhoto> photos = gardienPhotoRepository
+                    .findAllByGardienId(g.getId());
+            List<String> photoBase64 = photos.stream()
+                    .map(p -> Base64.getEncoder()
+                            .encodeToString(p.getPhoto()))
+                    .toList();
+            log.info("✅ Photos OK");
 
+            /*
+             * =======================
+             * TRANSACTIONS
+             * =======================
+             */
+            log.info("3️⃣ Chargement transactions...");
+            List<TransactionCaisseDto> paiements = repoTrasanction
+                    .findByGardienIdAndDateTransactionBetween(id, from, to)
+                    .stream()
+                    .map(h -> new TransactionCaisseDto(
+                            h.getId(),
+                            h.getDevise(),
+                            h.getDateTransaction(),
+                            h.getType(),
+                            h.getCategory(),
+                            h.getModePaiement(),
+                            h.getMontant(),
+                            h.getSens(),
+                            h.getDescription(),
+                            h.getReference(),
+                            h.getSoldeAvant(),
+                            h.getSoldeApres(),
+                            h.getUserId()))
+                    .toList();
+            log.info("✅ Transactions OK");
 
-    /* =======================
-       PRESENCES
-     ======================= */
-  List<PresenceDto> presences = pointageRepository
-        .findByGardienId(g.getId())
-        .stream()
-        .map(p -> PresenceDto.builder()
-                .id(p.getId())
-                .date(p.getDate())
-                .datesortie(p.getDatesortie())
-                .heureEntree(p.getHeureEntree())
-                .heureSortie(p.getHeureSortie())
-                .gardien(p.getGardien())
-                .statut(p.getStatut())
-                .build())
-        .toList();
+            /*
+             * =======================
+             * PRESENCES
+             * =======================
+             */
+            log.info("4️⃣ Chargement presences...");
+            List<PresenceDto> presences = pointageRepository.findByGardienIdAndDateBetween(g.getId(), dateFrom, dateTo)
+                    .stream()
+                    .map(p -> PresenceDto.builder()
+                            .id(p.getId())
+                            .date(p.getDate())
+                            .datesortie(p.getDatesortie())
+                            .heureEntree(p.getHeureEntree())
+                            .heureSortie(p.getHeureSortie())
+                            .gardien(p.getGardien())
+                            .statut(p.getStatut())
+                            .build())
+                    .toList();
+            log.info("✅ Presences OK");
 
+            /*
+             * =======================
+             * PLAINTES
+             * =======================
+             */
+            log.info("5️⃣ Chargement plaintes...");
+            List<PlainteDto> plaintes = plainteRepository
+                    .findByGardien_IdAndCreatedAtBetweenOrderByCreatedAtDesc(
+                            g.getId(), dateFrom, dateFrom)
+                    .stream()
+                    .map(this::mapToDto)
+                    .toList();
+            log.info("✅ Plaintes OK");
 
-    /* =======================
-       REGLEMENTS / SANCTIONS
-     ======================= */
-    List<PlainteDto> plaintes = plainteRepository
-        .findByGardien_Id(g.getId())
-        .stream()
-        .map(this::mapToDto)
-        .toList();
+            /*
+             * =======================
+             * STATS
+             * =======================
+             */
+            log.info("6️⃣ Chargement stats...");
+            GardienStatsDto stats = new GardienStatsDto();
+            stats.setTotalGardiens(gardienRepository.count());
+            stats.setActifs(gardienRepository.countByStatut(StatutGardien.ACTIF));
+            stats.setInactifs(gardienRepository.countByStatut(StatutGardien.BLOQUE));
+            stats.setSites(5);
+            log.info("✅ Stats OK");
 
+            log.info("🟢 FIN getGardienDetails OK");
 
-    /* =======================
-       DTO FINAL
-     ======================= */
-    GardienDetailsDto detailsDto = new GardienDetailsDto();
-    detailsDto.setGardien(dto);
-    detailsDto.setPaiements(paiements);
-    detailsDto.setPresences(presences);
-    detailsDto.setPlainte(plaintes);
-    detailsDto.setPhotos(photoBase64);
+            // Construire DTO final normalement
+            /* ======================= DTO FINAL ======================= */
+            GardienDetailsDto detailsDto = new GardienDetailsDto();
+            detailsDto.setGardien(dto);
+            detailsDto.setPaiements(paiements);
+            detailsDto.setPresences(presences);
+            detailsDto.setPlainte(plaintes);
+            detailsDto.setPhotos(photoBase64);
+            detailsDto.setStats(stats);
+            // ...
 
-    return detailsDto;
-}
+            // ...
+            return detailsDto;
 
- public GardienStatsDto statsbyid(Long id) {
+        } catch (Exception e) {
+
+            log.error("❌ ERREUR dans getGardienDetails id=" + id, e);
+
+            throw e; // très important pour garder le vrai stacktrace
+        }
+    }
+
+    public GardienStatsDto statsbyid(Long id) {
         GardienStatsDto stats = new GardienStatsDto();
         Gardien g = findById(id);
         stats.setTotalGardiens(gardienRepository.count());
@@ -349,27 +403,44 @@ List<AgentFinanceHistoryDto> paiements = agentFinanceHistoryRepository
         return stats;
     }
 
-private PlainteDto mapToDto(Plaintes p) {
+    private PlainteDto mapToDto(Plaintes p) {
 
-    PlainteDto dto = new PlainteDto();
+        PlainteDto dto = new PlainteDto();
 
-    dto.setId(p.getId());
-    dto.setDescription(p.getDescription());
-    dto.setDatePlainte(p.getDatePlainte());
-    dto.setStatut(p.getStatut());
-    dto.setNote(p.getNote());
-    dto.setNiveau(p.getNiveau());
-    dto.setDateLimiteReponse(p.getDateLimiteReponse());
-    dto.setReponseGardien(p.getReponseGardien());
-    dto.setRepondu(p.isRepondu());
+        dto.setId(p.getId());
+        dto.setDescription(p.getDescription());
+        dto.setDatePlainte(p.getDatePlainte());
+        dto.setStatut(p.getStatut());
+        dto.setNote(p.getNote());
+        dto.setNiveau(p.getNiveau());
+        dto.setDateLimiteReponse(p.getDateLimiteReponse());
+        dto.setReponseGardien(p.getReponseGardien());
+        dto.setRepondu(p.isRepondu());
 
-    dto.setGardienId(p.getGardien().getId());
-    dto.setClientId(p.getClient().getId());
+        dto.setGardienId(p.getGardien().getId());
+        dto.setClientId(p.getClient().getId());
 
-    dto.setGardienNom(p.getGardien().getNom());
-    dto.setClientNom(p.getClient().getNom());
+        dto.setGardienNom(p.getGardien().getNom());
+        dto.setClientNom(p.getClient().getNom());
 
-    return dto;
-}
+        // ✅ Liste des réponses
+        List<ReponseDto> reps = (p.getReponses() == null) ? List.of()
+                : p.getReponses().stream()
+                        .sorted(Comparator.comparing(ReponsePlainte::getDateReponse)) // optionnel
+                        .map(this::mapToReponseDto)
+                        .toList();
+
+        dto.setListeReponses(reps);
+
+        return dto;
+    }
+
+    private ReponseDto mapToReponseDto(ReponsePlainte r) {
+        ReponseDto dto = new ReponseDto();
+        dto.setId(r.getId());
+        dto.setReponse(r.getReponse());
+        dto.setDateReponse(r.getDateReponse());
+        return dto;
+    }
 
 }

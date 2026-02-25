@@ -1,5 +1,8 @@
 package com.king.peace.Dao;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -8,6 +11,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import com.king.peace.Entitys.Client;
+import com.king.peace.Entitys.Gardien;
 import com.king.peace.Entitys.Plaintes;
 
 @Repository
@@ -17,7 +22,7 @@ public interface PlainteRepository extends JpaRepository<Plaintes, Long> {
     List<Plaintes> findByGardien_Id(Long gardienId);
 
     // Optionnel : pour récupérer les plus récentes
-    List<Plaintes> findByGardien_IdOrderByDatePlainteDesc(Long gardienId);
+    List<Plaintes> findByGardien_IdOrderByCreatedAtDesc(Long gardienId);
 
     List<Plaintes> findByClientId(Long clientId);
 
@@ -40,5 +45,22 @@ public interface PlainteRepository extends JpaRepository<Plaintes, Long> {
     LEFT JOIN FETCH p.reponses
     """)
     List<Plaintes> findAllWithReponses();
+
+      List<Plaintes> findByClient_Id(Long clientId);
+
+        // ✅ Plainte du client entre 2 dates
+  List<Plaintes> findByClient_IdAndCreatedAtBetweenOrderByCreatedAtDesc(
+      Long clientId,
+      LocalDate from,
+      LocalDate to
+  );
+
+  // ✅ Plainte du gardien entre 2 dates
+  List<Plaintes> findByGardien_IdAndCreatedAtBetweenOrderByCreatedAtDesc(
+      Long gardienId,
+      LocalDate from,
+      LocalDate to
+  );
+
 
 }

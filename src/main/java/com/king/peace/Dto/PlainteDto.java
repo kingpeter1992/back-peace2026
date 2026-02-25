@@ -31,9 +31,8 @@ private Long id;
     private boolean repondu;
     private Long clientId;
     private Long gardienId;
+    private Long contratId;
     private boolean active;
     private List<ReponseDto> listeReponses;
-
-
     
 }

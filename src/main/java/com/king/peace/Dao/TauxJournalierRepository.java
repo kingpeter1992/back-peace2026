@@ -1,5 +1,6 @@
 package com.king.peace.Dao;
 
+import java.time.LocalDate;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -10,5 +11,8 @@ import com.king.peace.Entitys.TauxJournalier;
 public interface TauxJournalierRepository extends JpaRepository<TauxJournalier, Long>{
     Optional<TauxJournalier> findTopByOrderByDateDesc();
 
+    Optional<TauxJournalier> findTopByActifTrueOrderByCreatedAtDesc();
+
+    Optional<TauxJournalier> findTopByDateOrderByCreatedAtDesc(LocalDate date);
     
 }

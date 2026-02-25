@@ -2,7 +2,6 @@ package com.king.peace.Entitys;
 
 import java.time.LocalDateTime;
 
-import org.aspectj.weaver.loadtime.Agent;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -26,38 +25,45 @@ import lombok.Setter;
 @Builder
 public class TransactionCaisse {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id; // <-- clé primaire obligatoire
-    @Enumerated(EnumType.STRING)
-    private TypeTransaction type; // ENCAISSEMENT, DECAISSEMENT, AVANCE, PRET
-    private double montant;
-    @Enumerated(EnumType.STRING)
-    private Devise devise;   // 🔥 USD / CDF
-    private String description;
-    @Enumerated(EnumType.STRING)
-    private CategorieOperation category;
-    // SALAIRE, AVANCE, PRET, FACTURE, REMBOURSEMENT, AUTRE
-    private String sens;
-    private String reference;
-    private double soldeAvant;
-    private double soldeApres;
-    private Long userId;
-    @Enumerated(EnumType.STRING)
-    private ModePaiement modePaiement; // CASH, MOBILE_MONEY, BANQUE
+  @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+  private Long id;
 
-    private LocalDateTime dateTransaction;
+  @Enumerated(EnumType.STRING)
+  private TypeTransaction type; // ENCAISSEMENT, DECAISSEMENT
 
-    @ManyToOne
-    @JoinColumn(name = "caisse_id")
-    private Caisse caisse;
+  @Enumerated(EnumType.STRING)
+  private Devise devise; // USD, CDF
+  private double montant;
 
-    @ManyToOne
-    @JoinColumn(name = "client_id", nullable = true)
-    private Client client; // seulement si c'est un paiement client
+  @Enumerated(EnumType.STRING)
+  private CategorieOperation category;
 
-    @ManyToOne
-    @JoinColumn(name = "gardien_id", nullable = true)
-    private Gardien gardien; // nullable
+  @Enumerated(EnumType.STRING)
+  private ModePaiement modePaiement;
 
+  private String description;
+  private String reference;
+
+  private double soldeAvant;
+
+  private double soldeApres;
+
+  private String sens; // + / -
+  private String userId;
+
+  private LocalDateTime dateTransaction;
+
+  @ManyToOne(optional = false)
+  @JoinColumn(name="session_id")
+  private CaisseSession session;
+
+  @ManyToOne @JoinColumn(name="client_id")
+  private Client client;
+
+  @ManyToOne @JoinColumn(name="gardien_id")
+  private Gardien gardien;
+
+  @ManyToOne
+@JoinColumn(name="caisse_id")
+private Caisse caisse;
 }

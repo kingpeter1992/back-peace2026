@@ -17,6 +17,7 @@ public class FactureDTO {
     private double montantTotal;
     private String statut; // "NEW", "PAID", etc.
     private String description;
+    LocalDate dateCycle;
     private String refFacture;
     private int nombreGardiens;
     private double montantParGardien;
@@ -24,8 +25,11 @@ public class FactureDTO {
     private String devise;
     private Long clientId;
     private Long contratId;
+  private String motifAvoir;
         private Long factureOrigineId; // pour avoir
         private double remise;
     private String commentaire;
+    private Double montantPaye = 0.0;
+
 
 }

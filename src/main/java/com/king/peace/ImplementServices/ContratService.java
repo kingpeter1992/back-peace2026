@@ -23,7 +23,6 @@ public class ContratService {
     private final ClientRepository clientRepository;
 
     public ContratsdTO createContrat(ContratsdTO contrat, Long clientId) {
-        System.out.println("ContratService.createContrat()" + contrat.getDateDebutFacturation());
 
         Client client = clientRepository.findById(clientId)
                 .orElseThrow(() -> new RuntimeException("Client introuvable"));
@@ -39,7 +38,6 @@ public class ContratService {
         contrats.setTypePaiement(contrat.getTypePaiement());
         contrats.setClient(client);
         contrats.setRefContrats(contrat.getRefContrats());
-        System.out.println("status contrat " + contrat.getStatut());
         contrats.setStatut(contrat.getStatut());
         contrats.setDescription(contrat.getDescription());
         contrats.setDateEmission(LocalDate.now());

@@ -1,6 +1,7 @@
 package com.king.peace.Entitys;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -28,7 +29,9 @@ public class TauxJournalier {
     private Long id;
 
     private Double taux;
+    private Boolean actif = true;
 
+    private LocalDateTime createdAt = LocalDateTime.now();
 
     private LocalDate date;
 

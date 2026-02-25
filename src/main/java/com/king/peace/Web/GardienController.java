@@ -302,10 +302,14 @@ public ResponseEntity<List<Pointage>> pointerGardiensMasse(
 }
 
 
-    @GetMapping("/detailsgardien/{id}")
-    public GardienDetailsDto getGardienDetails(@PathVariable Long id) {
-        return gardienService.getGardienDetails(id);
-    }
+   
+  @GetMapping("/detailsgardien/{id}")
+  public GardienDetailsDto getGardienDetails(@PathVariable Long id,
+                                             @RequestParam LocalDate dateFrom,
+                                             @RequestParam LocalDate dateTo) {
+      return gardienService.getGardienDetails(id, dateFrom, dateTo);
+  }
+
 
      @GetMapping("/actifs")
     public List<Gardien> getActiveGardiens() {

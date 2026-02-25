@@ -36,7 +36,7 @@ public class Gardien {
     private String email;
     private LocalDate dateNaissance;
     private LocalDate createdAt;
-    private String devise;
+    private Devise devise;
     private boolean actif; // ✅ doit correspondre exactement au nom utilisé dans le repository
 
 

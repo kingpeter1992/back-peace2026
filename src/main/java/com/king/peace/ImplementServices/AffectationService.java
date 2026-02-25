@@ -95,6 +95,14 @@ public class AffectationService {
         throw new RuntimeException("Le gardien a déjà une affectation active");
     }
 
+
+    Long nombreAffecte = affectationRepository.countActiveByContratId(contrat.getId());
+
+if (nombreAffecte >= contrat.getNombreGardiens()) {
+    throw new RuntimeException("Le nombre d'affectations pour ce contrat est limité");
+}
+
+
     // Créer l'affectation
     Affectation a = Affectation.builder()
             .gardien(gardien)
@@ -159,6 +167,18 @@ public class AffectationService {
                 .active(saved.isActive())
                 .refContrats(saved.getContrat().getRefContrats())
                 .build();
+    }
+
+
+
+    public boolean existsByGardienIdAndContrat_Client_IdAndStatut(Long gardienId, Long clientId,
+            StatutAffectation active) {
+                return affectationRepository.existsByGardienIdAndContrat_Client_IdAndStatut(gardienId, clientId, active);
+    }
+
+    public Long countActiveByContratId(Long id) {
+
+        return affectationRepository.countActiveByContratId(id);
     }
 
    

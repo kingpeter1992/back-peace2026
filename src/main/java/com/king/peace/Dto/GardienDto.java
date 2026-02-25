@@ -3,6 +3,7 @@ package com.king.peace.Dto;
 import java.time.LocalDate;
 import java.util.Base64;
 
+import com.king.peace.Entitys.Devise;
 import com.king.peace.Entitys.Gardien;
 import com.king.peace.Entitys.GardienPhoto;
 import com.king.peace.Entitys.StatutGardien;
@@ -28,7 +29,7 @@ public class GardienDto {
     private String email;
     private LocalDate dateNaissance;
     private LocalDate createdAt;
-    private String devise;
+    private Devise devise;
     private String photo;
         private String photoBase64; // photo convertie en Base64 pour l'aperçu
 

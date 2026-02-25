@@ -5,5 +5,6 @@ public enum StatutFacture {
     REFACTURE,  // Facture modifiée suite à réclamation
     ANNULE,      // Facture annulée totalement
     NEW,
-    PAID
+    PAID,
+    PARTIAL
 }

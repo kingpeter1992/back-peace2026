@@ -8,16 +8,20 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.king.peace.Dao.ClientRepository;
+import com.king.peace.Dao.ContratRepository;
 import com.king.peace.Dao.GardienRepository;
 import com.king.peace.Dao.PlainteRepository;
 import com.king.peace.Dao.ReponsePlainteRepository;
 import com.king.peace.Dto.PlainteDto;
 import com.king.peace.Dto.ReponseDto;
+import com.king.peace.Entitys.Affectation;
 import com.king.peace.Entitys.Client;
+import com.king.peace.Entitys.Contrats;
 import com.king.peace.Entitys.Gardien;
 import com.king.peace.Entitys.NiveauPlainte;
 import com.king.peace.Entitys.Plaintes;
 import com.king.peace.Entitys.ReponsePlainte;
+import com.king.peace.Entitys.StatutAffectation;
 
 import lombok.RequiredArgsConstructor;
 
@@ -29,24 +33,53 @@ public class PlainteService {
     private final ClientRepository clientRepository;
     private final GardienRepository gardienRepository;
     private final ReponsePlainteRepository reponsePlainteRepository;
+    private final AffectationService affectationRepository;
+    private final ContratRepository contratRepository;
+
+
 
 
     // 🔹 CREATE
     public PlainteDto create(PlainteDto dto) {
+        System.err.println(dto.getClientId());
+        System.err.println(dto.getGardienId());
+        System.err.println(dto.getDescription());
+        System.err.println(dto.getNote());
 
-        Plaintes plainte = new Plaintes();
+ if (dto.getClientId() == null) throw new RuntimeException("Client obligatoire");
+    if (dto.getGardienId() == null) throw new RuntimeException("Gardien obligatoire");
+    if (dto.getDescription() == null || dto.getDescription().isBlank())
+        throw new RuntimeException("Description obligatoire");
+    if (dto.getNote() == null) throw new RuntimeException("Note obligatoire");
 
-        plainte.setDescription(dto.getDescription());
-        plainte.setNote(dto.getNote());
-        plainte.setNiveau(calculerNiveau(dto.getNote()));
-        plainte.setDatePlainte(LocalDate.now());
-        plainte.setDateLimiteReponse(LocalDate.now().plusDays(3));
+    // ✅ Vérifier affectation ACTIVE du gardien sur un contrat du client
+    boolean affecte = affectationRepository.existsByGardienIdAndContrat_Client_IdAndStatut(
+            dto.getGardienId(),
+            dto.getClientId(),
+            StatutAffectation.ACTIVE
+    );
 
-        plainte.setClient(clientRepository.findById(dto.getClientId()).orElseThrow());
-        plainte.setGardien(gardienRepository.findById(dto.getGardienId()).orElseThrow());
-
-        return mapToDTO(plainteRepository.save(plainte));
+    if (!affecte) {
+        throw new RuntimeException("Impossible : ce gardien n’est pas affecté à ce client (aucune affectation ACTIVE).");
     }
+
+
+    Plaintes plainte = new Plaintes();
+    plainte.setDescription(dto.getDescription());
+    plainte.setNote(dto.getNote());
+    plainte.setNiveau(calculerNiveau(dto.getNote()));
+    plainte.setDatePlainte(LocalDate.now());
+    plainte.setDateLimiteReponse(LocalDate.now().plusDays(3));
+    plainte.setCreatedAt(LocalDate.now());
+
+    plainte.setClient(clientRepository.findById(dto.getClientId())
+            .orElseThrow(() -> new RuntimeException("Client introuvable")));
+
+    plainte.setGardien(gardienRepository.findById(dto.getGardienId())
+            .orElseThrow(() -> new RuntimeException("Gardien introuvable")));
+
+    return mapToDTO(plainteRepository.save(plainte));
+}
 
     // 🔹 READ ALL
     public List<PlainteDto> getAll() {

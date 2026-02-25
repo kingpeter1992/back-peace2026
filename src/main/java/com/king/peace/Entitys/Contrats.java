@@ -48,6 +48,8 @@ public class Contrats {
     private String zone;
     private String statut; // EX: EMIS, ANNULÉ, REFACTURE
    private boolean active=true;
+   private LocalDate createdAt=LocalDate.now();
+
 
     @ManyToOne private Client client;
 
