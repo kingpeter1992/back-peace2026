@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -90,6 +91,9 @@ public ResponseEntity<FactureDTO> createManualFacture(@RequestBody FactureDTO dt
 @PostMapping("/avoir/{id}")
 public ResponseEntity<FactureDTO> createAvoir(@PathVariable Long id,
                                               @RequestBody FactureDTO dto) {
+
+                                                System.err.println(id);
+                                                System.err.println(dto.getMotifAvoir());
     FactureDTO avoir = factureService.createAvoir(id, dto);
     return ResponseEntity.ok(avoir);
 }
@@ -106,7 +110,9 @@ public List<Map<String, Object>> monthly(
 
 
 @PostMapping("/avoir")
-public ResponseEntity<?> creerAvoirParRef(@RequestBody FactureDTO req) {
+public ResponseEntity<FactureDTO> creerAvoirParRef(@RequestBody FactureDTO req) {
+
+    System.err.println("Facture originae============== "+req.getFactureOrigineId()+ "Motif===========r " +req.getMotifAvoir());
     FactureDTO avoir = factureService.createAvoir(req.getFactureOrigineId(), req);
     return ResponseEntity.ok(avoir);
 }
@@ -119,5 +125,18 @@ public ResponseEntity<?> payerFacture(@PathVariable Long id,
     return ResponseEntity.ok().build();
 }
 
+
+ // ✅ /api/factures?dateFrom=2026-01-01&dateTo=2026-02-25
+    @GetMapping("/between")
+    public List<FactureDTO> getAllBetween(
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateFrom,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateTo
+    ) {
+        // si pas de dates => tout
+        if (dateFrom == null && dateTo == null) {
+            return factureService.getAll();
+        }
+        return factureService.getAllBetween(dateFrom, dateTo);
+    }
 
 }

@@ -20,6 +20,7 @@ public class Affectation {
     private LocalDate dateDebut;
     private LocalDate dateFin;
     private boolean active;
+    private String site;
 
     // Gardien affecté
     @ManyToOne

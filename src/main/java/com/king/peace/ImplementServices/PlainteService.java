@@ -36,50 +36,49 @@ public class PlainteService {
     private final AffectationService affectationRepository;
     private final ContratRepository contratRepository;
 
-
-
-
     // 🔹 CREATE
     public PlainteDto create(PlainteDto dto) {
-        System.err.println(dto.getClientId());
-        System.err.println(dto.getGardienId());
-        System.err.println(dto.getDescription());
-        System.err.println(dto.getNote());
+        if (dto.getClientId() == null)
+            throw new RuntimeException("Client obligatoire");
+        if (dto.getGardienId() == null)
+            throw new RuntimeException("Gardien obligatoire");
+        if (dto.getDescription() == null || dto.getDescription().isBlank())
+            throw new RuntimeException("Description obligatoire");
+        if (dto.getNote() == null)
+            throw new RuntimeException("Note obligatoire");
 
- if (dto.getClientId() == null) throw new RuntimeException("Client obligatoire");
-    if (dto.getGardienId() == null) throw new RuntimeException("Gardien obligatoire");
-    if (dto.getDescription() == null || dto.getDescription().isBlank())
-        throw new RuntimeException("Description obligatoire");
-    if (dto.getNote() == null) throw new RuntimeException("Note obligatoire");
+        // Vérifier que client existe
+        var client = clientRepository.findById(dto.getClientId())
+                .orElseThrow(() -> new RuntimeException("Client introuvable"));
 
-    // ✅ Vérifier affectation ACTIVE du gardien sur un contrat du client
-    boolean affecte = affectationRepository.existsByGardienIdAndContrat_Client_IdAndStatut(
-            dto.getGardienId(),
-            dto.getClientId(),
-            StatutAffectation.ACTIVE
-    );
+        // Vérifier que gardien existe
+        var gardien = gardienRepository.findById(dto.getGardienId())
+                .orElseThrow(() -> new RuntimeException("Gardien introuvable id=" + dto.getGardienId()));
 
-    if (!affecte) {
-        throw new RuntimeException("Impossible : ce gardien n’est pas affecté à ce client (aucune affectation ACTIVE).");
+        // Vérifier affectation ACTIVE
+        boolean affecte = affectationRepository.existsByGardienIdAndContrat_Client_IdAndStatut(
+                dto.getGardienId(),
+                dto.getClientId(),
+                StatutAffectation.ACTIVE);
+
+        if (!affecte) {
+            throw new RuntimeException("Impossible : gardien " + dto.getGardienId()
+                    + " non affecté ACTIVE au client " + dto.getClientId());
+        }
+
+        Plaintes plainte = new Plaintes();
+        plainte.setDescription(dto.getDescription());
+        plainte.setNote(dto.getNote());
+        plainte.setNiveau(calculerNiveau(dto.getNote()));
+        plainte.setDatePlainte(LocalDate.now());
+        plainte.setDateLimiteReponse(LocalDate.now().plusDays(3));
+        plainte.setCreatedAt(LocalDate.now());
+
+        plainte.setClient(client);
+        plainte.setGardien(gardien);
+
+        return mapToDTO(plainteRepository.save(plainte));
     }
-
-
-    Plaintes plainte = new Plaintes();
-    plainte.setDescription(dto.getDescription());
-    plainte.setNote(dto.getNote());
-    plainte.setNiveau(calculerNiveau(dto.getNote()));
-    plainte.setDatePlainte(LocalDate.now());
-    plainte.setDateLimiteReponse(LocalDate.now().plusDays(3));
-    plainte.setCreatedAt(LocalDate.now());
-
-    plainte.setClient(clientRepository.findById(dto.getClientId())
-            .orElseThrow(() -> new RuntimeException("Client introuvable")));
-
-    plainte.setGardien(gardienRepository.findById(dto.getGardienId())
-            .orElseThrow(() -> new RuntimeException("Gardien introuvable")));
-
-    return mapToDTO(plainteRepository.save(plainte));
-}
 
     // 🔹 READ ALL
     public List<PlainteDto> getAll() {
@@ -94,21 +93,20 @@ public class PlainteService {
         plainteRepository.deleteById(id);
     }
 
-
     // 🔹 Calcul automatique
     private NiveauPlainte calculerNiveau(int note) {
 
-        if(note <= 3)
+        if (note <= 3)
             return NiveauPlainte.SANS_PROBLEME;
-        else if(note <= 5)
+        else if (note <= 5)
             return NiveauPlainte.ASSEZ_PROBLEMATIQUE;
-        else if(note <= 8)
+        else if (note <= 8)
             return NiveauPlainte.PROBLEMATIQUE;
         else
             return NiveauPlainte.TRES_PROBLEMATIQUE;
     }
 
-    private PlainteDto mapToDTO(Plaintes p){
+    private PlainteDto mapToDTO(Plaintes p) {
         PlainteDto dto = new PlainteDto();
 
         dto.setId(p.getId());
@@ -129,38 +127,36 @@ public class PlainteService {
         return dto;
     }
 
-  public ReponseDto ajouterReponse(Long plainteId, ReponseDto dto) {
-    
-    Plaintes plainte = plainteRepository.findById(plainteId)
-        .orElseThrow(() -> new RuntimeException("Plainte non trouvée"));
+    public ReponseDto ajouterReponse(Long plainteId, ReponseDto dto) {
 
-    if(!plainte.isActive()) {
-        throw new RuntimeException("Plainte clôturée, impossible de répondre");
-    }
+        Plaintes plainte = plainteRepository.findById(plainteId)
+                .orElseThrow(() -> new RuntimeException("Plainte non trouvée"));
 
-    // Création de la réponse
+        if (!plainte.isActive()) {
+            throw new RuntimeException("Plainte clôturée, impossible de répondre");
+        }
+
+        // Création de la réponse
         ReponsePlainte reponse = new ReponsePlainte();
         reponse.setReponse(dto.getReponse());
         reponse.setDateReponse(LocalDateTime.now());
         reponse.setPlainte(plainte);
 
+        reponsePlainteRepository.save(reponse);
 
-    reponsePlainteRepository.save(reponse);
-
-    return ReponseDto.builder()
+        return ReponseDto.builder()
                 .id(reponse.getId())
                 .reponse(reponse.getReponse())
                 .dateReponse(reponse.getDateReponse())
                 .build();
-    
 
-}
+    }
 
-public List<ReponsePlainte> listerReponses(Long plainteId) {
-    return reponsePlainteRepository.findByPlainteId(plainteId);
-}
+    public List<ReponsePlainte> listerReponses(Long plainteId) {
+        return reponsePlainteRepository.findByPlainteId(plainteId);
+    }
 
-   public PlainteDto update(Long id, PlainteDto dto) {
+    public PlainteDto update(Long id, PlainteDto dto) {
 
         Plaintes plainte = plainteRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Plainte introuvable"));
@@ -189,81 +185,74 @@ public List<ReponsePlainte> listerReponses(Long plainteId) {
         return mapToDTO(plainte);
     }
 
+    @Transactional(readOnly = true)
+    public List<PlainteDto> getAllPlainteWithResponse() {
 
+        return plainteRepository.findAllWithReponses()
+                .stream()
+                .map(this::mapToDto)
+                .toList();
+    }
 
+    private PlainteDto mapToDto(Plaintes plainte) {
 
-@Transactional(readOnly = true)
-public List<PlainteDto> getAllPlainteWithResponse() {
+        return PlainteDto.builder()
+                .id(plainte.getId())
+                .description(plainte.getDescription())
+                .datePlainte(plainte.getDatePlainte())
+                .statut(plainte.getStatut())
+                .note(plainte.getNote())
+                .niveau(plainte.getNiveau())
+                .dateLimiteReponse(plainte.getDateLimiteReponse())
+                .reponseGardien(plainte.getReponseGardien())
+                .repondu(plainte.isRepondu())
+                .active(plainte.isActive())
 
-    return plainteRepository.findAllWithReponses()
-            .stream()
-            .map(this::mapToDto)
-            .toList();
-}
+                .clientNom(
+                        plainte.getClient() != null
+                                ? plainte.getClient().getNom()
+                                : null)
 
+                .gardienNom(
+                        plainte.getGardien() != null
+                                ? plainte.getGardien().getNom()
+                                : null)
 
-private PlainteDto mapToDto(Plaintes plainte) {
+                .clientId(
+                        plainte.getClient() != null
+                                ? plainte.getClient().getId()
+                                : null)
 
-    return PlainteDto.builder()
-            .id(plainte.getId())
-            .description(plainte.getDescription())
-            .datePlainte(plainte.getDatePlainte())
-            .statut(plainte.getStatut())
-            .note(plainte.getNote())
-            .niveau(plainte.getNiveau())
-            .dateLimiteReponse(plainte.getDateLimiteReponse())
-            .reponseGardien(plainte.getReponseGardien())
-            .repondu(plainte.isRepondu())
-            .active(plainte.isActive())
+                .gardienId(
+                        plainte.getGardien() != null
+                                ? plainte.getGardien().getId()
+                                : null)
 
-            .clientNom(
-                    plainte.getClient() != null
-                            ? plainte.getClient().getNom()
-                            : null
-            )
+                .listeReponses(
+                        plainte.getReponses() != null
+                                ? plainte.getReponses()
+                                        .stream()
+                                        .map(r -> ReponseDto.builder()
+                                                .id(r.getId())
+                                                .reponse(r.getReponse())
+                                                .dateReponse(r.getDateReponse())
+                                                .build())
+                                        .sorted((a, b) -> b.getDateReponse().compareTo(a.getDateReponse())) // tri
+                                                                                                            // récent en
+                                                                                                            // premier
+                                        .toList()
+                                : List.of())
 
-            .gardienNom(
-                    plainte.getGardien() != null
-                            ? plainte.getGardien().getNom()
-                            : null
-            )
+                .build();
+    }
 
-            .clientId(
-                    plainte.getClient() != null
-                            ? plainte.getClient().getId()
-                            : null
-            )
+    @Transactional(readOnly = true)
+    public PlainteDto getRespnseById(Long id) {
+        Plaintes plainte = plainteRepository
+                .findByIdWithRelations(id)
+                .orElseThrow(() -> new RuntimeException("Plainte non trouvée"));
 
-            .gardienId(
-                    plainte.getGardien() != null
-                            ? plainte.getGardien().getId()
-                            : null
-            )
-
-            .listeReponses(
-                    plainte.getReponses() != null
-                            ? plainte.getReponses()
-                                    .stream()
-                                    .map(r -> ReponseDto.builder()
-                                            .id(r.getId())
-                                            .reponse(r.getReponse())
-                                            .dateReponse(r.getDateReponse())
-                                            .build())
-                                    .sorted((a, b) -> b.getDateReponse().compareTo(a.getDateReponse())) // tri récent en premier
-                                    .toList()
-                            : List.of()
-            )
-
-            .build();
-}
-
-
-@Transactional(readOnly = true)
-public PlainteDto getRespnseById(Long id) {   Plaintes plainte = plainteRepository
-            .findByIdWithRelations(id)
-            .orElseThrow(() -> new RuntimeException("Plainte non trouvée"));
-
-    return mapToDto(plainte);
-}
+        return mapToDto(plainte);
+    }
 
 }

@@ -16,7 +16,7 @@ public class CorsConfig  {
 	  @Bean
 	   public CorsConfigurationSource corsConfigurationSource() {
 	       CorsConfiguration configuration = new CorsConfiguration();
-	       configuration.setAllowedOrigins(List.of("http://localhost:4200","https://peace-frontv1.vercel.app/","https://ideal-trout-x4r6w9vrxg6hp9px-8082.app.github.dev/")); // Remplacez par l'origine de votre application Angular
+	       configuration.setAllowedOrigins(List.of("http://localhost:4200","https://peace-frontv1.vercel.app/")); // Remplacez par l'origine de votre application Angular
 	       configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
 	       configuration.setAllowedHeaders(List.of("Authorization", "Content-Type"));
 	        configuration.setExposedHeaders(List.of("Content-Disposition")); // ✅ Exposer Content-Disposition

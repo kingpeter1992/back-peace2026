@@ -113,6 +113,7 @@ if (nombreAffecte >= contrat.getNombreGardiens()) {
             .statut(dto.getStatut() != null ? dto.getStatut() : StatutAffectation.ACTIVE)
             .description(dto.getDescription())
             .active(true)
+            .site(contrat.getZone())
             .build();
 
     // Sauvegarder

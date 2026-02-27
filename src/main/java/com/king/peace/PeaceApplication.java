@@ -39,8 +39,7 @@ import com.king.peace.Entitys.TransactionCaisse;
 import com.king.peace.Entitys.TypeTransaction;
 import com.king.peace.Entitys.User;
 
-@EnableScheduling
-@SpringBootApplication(exclude = { DataSourceAutoConfiguration.class })
+@SpringBootApplication
 public class PeaceApplication {
 
     public static void main(String[] args) {

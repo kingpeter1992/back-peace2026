@@ -11,6 +11,7 @@ import java.util.Optional;
 import org.springframework.stereotype.Service;
 
 import com.king.peace.Dao.AffectationRepository;
+import com.king.peace.Dao.ContratRepository;
 import com.king.peace.Dao.GardienPhotoRepository;
 import com.king.peace.Dao.GardienRepository;
 import com.king.peace.Dao.PlainteRepository;
@@ -231,13 +232,19 @@ public class GardienService {
 
         return dtos;
     }
-
+    private final ContratRepository contratRepository;
     public GardienStatsDto getStats() {
         GardienStatsDto stats = new GardienStatsDto();
         stats.setTotalGardiens(gardienRepository.count());
         stats.setActifs(gardienRepository.countByStatut(StatutGardien.ACTIF));
         stats.setInactifs(gardienRepository.countByStatut(StatutGardien.BLOQUE));
-        stats.setSites(5);
+        double salaireCDF = gardienRepository.countSalairesCDF();
+        double salaireUSD = gardienRepository.countSalairesUSD();
+        stats.setSalaireCDF(salaireCDF);
+        stats.setSalaireUSD(salaireUSD);
+
+        Long countZone = contratRepository.countDistinctZones();
+            stats.setSites(countZone);
         return stats;
     }
 

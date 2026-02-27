@@ -6,6 +6,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -171,6 +172,7 @@ public class FacturationService {
                 .devise(facture.getDevise() != null ? facture.getDevise().name() : null)
                 .remise(facture.getRemise())
                 .commentaire(facture.getCommentaire())
+                .motifAvoir(facture.getMotifAvoir())
                 .clientId(facture.getClient() != null ? facture.getClient().getId() : null)
                 .contratId(facture.getContrats() != null ? facture.getContrats().getId() : null)
                 .factureOrigineId(facture.getFactureOrigine() != null ? facture.getFactureOrigine().getId() : null)
@@ -254,8 +256,8 @@ public class FacturationService {
                 .description(
                         (dto.getDescription() != null && !dto.getDescription().isBlank())
                                 ? dto.getDescription()
-                                : "Avoir pour facture " + factureOrigine.getRefFacture())
-                .motifAvoir(dto.getMotifAvoir()) // ✅ si ton entity a un champ motif (sinon mets commentaire)
+                                : "" +dto.getMotifAvoir() +" : Avoir pour facture " + factureOrigine.getRefFacture())
+                .motifAvoir("avoir") // ✅ si ton entity a un champ motif (sinon mets commentaire)
                 .remise(remise)
                 .commentaire(dto.getCommentaire())
                 .montantTotal(montantAvoir)
@@ -282,29 +284,34 @@ public class FacturationService {
         return toDto(savedAvoir);
     }
 
-    public List<Map<String, Object>> monthlyStats(LocalDate dateFrom, LocalDate dateTo, Long clientId) {
+public List<Map<String, Object>> monthlyStats(LocalDate dateFrom, LocalDate dateTo, Long clientId) {
 
-        List<Object[]> rows = factureRepository.monthlyStats(dateFrom, dateTo, clientId);
+  List<Object[]> rows = factureRepository.monthlyStatsByDevise(dateFrom, dateTo, clientId);
 
-        // init 12 mois à 0
-        double[] totals = new double[12];
-        Arrays.fill(totals, 0.0);
+  // init 12 mois
+  double[] cdf = new double[12];
+  double[] usd = new double[12];
 
-        // rows: [month(1..12), total]
-        for (Object[] r : rows) {
-            int month = ((Number) r[0]).intValue(); // 1..12
-            double total = ((Number) r[1]).doubleValue();
-            if (month >= 1 && month <= 12)
-                totals[month - 1] = total;
-        }
+  for (Object[] r : rows) {
+    int month = ((Number) r[0]).intValue(); // 1..12
+    String devise = String.valueOf(r[1]).toUpperCase(); // CDF / USD
+    double total = ((Number) r[2]).doubleValue();
 
-        List<Map<String, Object>> result = new ArrayList<>();
-        for (int m = 1; m <= 12; m++) {
-            result.add(Map.of("month", m, "total", totals[m - 1]));
-        }
-        return result;
-    }
+    if (month < 1 || month > 12) continue;
 
+    if (devise.equals("CDF")) cdf[month - 1] = total;
+    if (devise.equals("USD")) usd[month - 1] = total;
+  }
+
+  // renvoi: [{month, devise, total}, ...]
+  List<Map<String, Object>> result = new ArrayList<>();
+  for (int m = 1; m <= 12; m++) {
+    result.add(Map.of("month", m, "devise", "CDF", "total", cdf[m - 1]));
+    result.add(Map.of("month", m, "devise", "USD", "total", usd[m - 1]));
+  }
+
+  return result;
+}
     @Transactional
     public void payerFacture(Long factureId, double montantPaiement) {
 
@@ -343,4 +350,21 @@ public class FacturationService {
         factureRepository.save(f);
     }
 
+
+    public List<FactureDTO> getAll() {
+        return factureRepository.findAllByOrderByDateEmissionDesc()
+                .stream().map(this::toDto).toList();
+    }
+
+    public List<FactureDTO> getAllBetween(LocalDate dateFrom, LocalDate dateTo) {
+
+        // ✅ defaults si un côté est vide
+        LocalDate from = (dateFrom != null) ? dateFrom : LocalDate.of(1900, 1, 1);
+        LocalDate to   = (dateTo != null) ? dateTo : LocalDate.now();
+
+        return factureRepository.findByDateEmissionBetweenOrderByDateEmissionDesc(from, to)
+                .stream().map(this::toDto).toList();
+    }
+
+   
 }

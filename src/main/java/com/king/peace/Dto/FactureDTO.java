@@ -2,6 +2,9 @@ package com.king.peace.Dto;
 
 import java.time.LocalDate;
 
+import com.king.peace.Entitys.Devise;
+import com.king.peace.Entitys.StatutFacture;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -30,6 +33,8 @@ public class FactureDTO {
         private double remise;
     private String commentaire;
     private Double montantPaye = 0.0;
+    private StatutFacture status;
+    private Devise  devis;
 
 
 }

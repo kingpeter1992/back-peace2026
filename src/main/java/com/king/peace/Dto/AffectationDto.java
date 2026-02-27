@@ -22,4 +22,5 @@ public class AffectationDto {
     private String  description;
     private boolean active;
     private String refContrats;
+    private String site;
 }

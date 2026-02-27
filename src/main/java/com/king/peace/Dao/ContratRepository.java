@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import com.king.peace.Entitys.Client;
@@ -43,4 +44,7 @@ List<Contrats> findByClientIdAndCreatedAtBetween(
 );
 long countByClientIdAndCreatedAtBetween(Long clientId, LocalDate dateFrom, LocalDate dateTo);
 long countByClientIdAndActiveAndCreatedAtBetween(Long clientId, boolean b, LocalDate dateFrom, LocalDate dateTo);
+
+@Query("SELECT COUNT(DISTINCT c.zone) FROM Contrats c")
+Long countDistinctZones();
 }

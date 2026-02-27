@@ -1,6 +1,7 @@
 package com.king.peace.Dao;
 
 import java.time.LocalDate;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -65,4 +66,22 @@ List<Facture> findByClient_IdAndDeviseAndStatutAndMotifAvoirIsNullOrderByDateEmi
     Devise devise,
     StatutFacture statut
 );
+    List<Facture> findAllByOrderByDateEmissionDesc();
+
+    List<Facture> findByDateEmissionBetweenOrderByDateEmissionDesc(
+            LocalDate dateFrom,
+            LocalDate dateTo
+    );
+
+@Query("""
+  select month(f.dateEmission), f.devise, coalesce(sum(f.montantTotal), 0)
+  from Facture f
+  where (:clientId is null or f.client.id = :clientId)
+    and f.dateEmission between :dateFrom and :dateTo
+    and cast(f.statut as string) <> 'ANNULEE'
+  group by month(f.dateEmission), f.devise
+  order by month(f.dateEmission), f.devise
+""")
+List<Object[]> monthlyStatsByDevise(LocalDate dateFrom, LocalDate dateTo, Long clientId);
+
 }

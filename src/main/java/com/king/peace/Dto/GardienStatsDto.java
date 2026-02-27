@@ -10,6 +10,9 @@ public class GardienStatsDto {
     private long actifs;
     private long inactifs;
     private long sites;
+    private double salaireCDF;
+    private double salaireUSD;
+
 
     // getters et setters
 }

@@ -29,6 +29,18 @@ public class Role {
 	@Column(length = 60)
 	private ERole name;
 
+	 @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (!(o instanceof Role other)) return false;
+    return name == other.name;
+  }
+
+  @Override
+  public int hashCode() {
+    return name != null ? name.hashCode() : 0;
+  }
+
 	public Integer getId() {
 		return id;
 	}

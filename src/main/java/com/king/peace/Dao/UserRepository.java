@@ -3,6 +3,8 @@ package com.king.peace.Dao;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
+import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.domain.Page;
@@ -10,6 +12,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import com.king.peace.Dto.UserDto;
 import com.king.peace.Entitys.User;
 
 
@@ -39,6 +42,11 @@ public interface UserRepository  extends JpaRepository<User, Long>{
     public Optional<User> findByEmail(String email);
 
     Optional<User> findByToken(String token);
+
+  @Query("select distinct u from User u left join fetch u.roles")
+  List<User> findAllWithRoles();
+   @Query("select u from User u left join fetch u.roles where u.id = :id")
+    Optional<User> findByIdWithRoles(@Param("id") Long id);
 
 
 }
