@@ -23,7 +23,7 @@ public class PretServiceImpl implements PretService {
 
     @Override
     public PretDTO save(PretDTO dto) {
-        Gardien employe = employeRepository.findById(dto.getEmployeId()).orElseThrow();
+        Gardien employe = employeRepository.findById(dto.getGardienId()).orElseThrow();
         Pret pret = Pret.builder()
                 .id(dto.getId())
                 .gardien(employe)
@@ -32,6 +32,7 @@ public class PretServiceImpl implements PretService {
                 .nombreMois(dto.getNombreMois())
                 .mensualite(dto.getMensualite())
                 .dateDebut(dto.getDateDebut())
+                .devise(dto.getDevise())
                 .statut(dto.getStatut() == null ? StatutPret.EN_COURS : dto.getStatut())
                 .motif(dto.getMotif())
                 .build();

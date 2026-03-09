@@ -26,11 +26,19 @@ public class AvanceSalaire {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private com.king.peace.enums.StatutAvance statut;
+    private String motif;
 
     private String observation;
 
            @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Devise devise;
+
+      @Column(name = "mois_concerne", nullable = false)
+    private Integer moisConcerne;
+
+    @Column(name = "annee_concerne", nullable = false)
+    private Integer anneeConcerne;
+
     
 }

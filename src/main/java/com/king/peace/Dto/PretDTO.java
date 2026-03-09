@@ -4,13 +4,14 @@ import lombok.*;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
+import com.king.peace.Entitys.Devise;
 import com.king.peace.enums.StatutPret;
 
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
 public class PretDTO {
     private Long id;
-    private Long employeId;
-    private String employeNom;
+private Long gardienId; 
+   private String gardienNom;
     private double montantTotal;
     private double montantRestant;
     private Integer nombreMois;
@@ -18,4 +19,5 @@ public class PretDTO {
     private LocalDate dateDebut;
     private StatutPret statut;
     private String motif;
+    private Devise devise;
 }

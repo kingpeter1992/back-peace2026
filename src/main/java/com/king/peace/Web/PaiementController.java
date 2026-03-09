@@ -1,7 +1,9 @@
 package com.king.peace.Web;
 
+import java.time.LocalDate;
 import java.util.List;
 
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -10,19 +12,16 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import com.king.peace.Dto.PaieDTO;
+import com.king.peace.Dto.PaieGenerationForceDTO;
+import com.king.peace.Dto.PaieGenerationMasseDTO;
+import com.king.peace.Dto.PaieGenerationMasseRequestDTO;
+import com.king.peace.Dto.PaiementDashboardDTO;
 
-import com.king.peace.Dto.AvanceSalaireDTO;
-import com.king.peace.Dto.GenererPaieRequest;
-import com.king.peace.Dto.PaiementSalaireDTO;
-import com.king.peace.Dto.PretDTO;
-import com.king.peace.Dto.PrimeDTO;
-import com.king.peace.Dto.RetenueDTO;
-import com.king.peace.Interfaces.AvanceSalaireService;
-import com.king.peace.Interfaces.PaiementSalaireService;
-import com.king.peace.Interfaces.PretService;
-import com.king.peace.Interfaces.PrimeService;
-import com.king.peace.Interfaces.RetenueService;
+import com.king.peace.ImplementServices.PaiementSalaireServiceImpl;
+
 
 import lombok.RequiredArgsConstructor;
 
@@ -32,70 +31,95 @@ import lombok.RequiredArgsConstructor;
 @CrossOrigin("*")
 public class PaiementController {
 
+    private final PaiementSalaireServiceImpl service;
+ // Générer la paie d'un gardien pour un mois/année
+    @PostMapping("/generer")
+    public ResponseEntity<PaieDTO> genererPaie(
+            @RequestParam Long gardienId,
+            @RequestParam Integer mois,
+            @RequestParam Integer annee
+    ) {
+        return ResponseEntity.ok(service.genererPaie(gardienId, mois, annee));
+    }
 
-private final PrimeService servicePaiement;
+@PostMapping("/generer-masse")
+public ResponseEntity<PaieGenerationMasseDTO> genererPaieMasse(
+         @RequestBody PaieGenerationMasseRequestDTO request
+) {
+    return ResponseEntity.ok(service.genererPaieMasse(request));
+}
+@PostMapping("/generer-force")
+public ResponseEntity<PaieDTO> genererPaieForce(@RequestBody PaieGenerationForceDTO request) {
+    return ResponseEntity.ok(service.genererPaieForce(request));
+}
 
-    @PostMapping
-    public PrimeDTO savePaiement(@RequestBody PrimeDTO dto) { return servicePaiement.save(dto); }
+@PutMapping("/valider-masse")
+public ResponseEntity<List<PaieDTO>> validerMasse(@RequestBody List<Long> ids) {
+    return ResponseEntity.ok(service.validerMasse(ids));
+}
 
-    @GetMapping("/fildAllPaiement")
-    public List<PrimeDTO> findAllPaiement() { return servicePaiement.findAll(); }
+@PutMapping("/payer-masse")
+public ResponseEntity<List<PaieDTO>> payerMasse(@RequestBody List<Long> ids) {
+    return ResponseEntity.ok(service.payerMasse(ids));
+}
 
-    @DeleteMapping("deletePaiementByid/{id}")
-    public void deletePaiementById(@PathVariable Long id) { servicePaiement.delete(id); }
-
-
-     private final RetenueService serviceRetenues;
-
-    @PostMapping("/saveRetenues")
-    public RetenueDTO saveRetenues(@RequestBody RetenueDTO dto) { return serviceRetenues.save(dto); }
-
-    @GetMapping("/retenues")
-    public List<RetenueDTO> findAllRetenues() { return serviceRetenues.findAll(); }
-
-    @DeleteMapping("deleteRetenuesById/{id}")
-    public void deleteRetenuesById(@PathVariable Long id) { serviceRetenues.delete(id); }
+@PutMapping("/annuler-masse")
+public ResponseEntity<List<PaieDTO>> annulerMasse(@RequestBody List<Long> ids) {
+    return ResponseEntity.ok(service.annulerMasse(ids));
+}
     
-     private final AvanceSalaireService serviceAvance;
-
-    @PostMapping("/saveAvance")
-    public AvanceSalaireDTO saveAvance(@RequestBody AvanceSalaireDTO dto) { return serviceAvance.save(dto); }
-
-    @PutMapping("/{id}/validerAvance")
-    public AvanceSalaireDTO validerAvance(@PathVariable Long id) { return serviceAvance.valider(id); }
-
-    @GetMapping("/findAllAvance")
-    public List<AvanceSalaireDTO> findAllAvance() { return serviceAvance.findAll(); }
-
-    @DeleteMapping("/deleteAvanceById/{id}")
-    public void deleteAvanceById(@PathVariable Long id) { serviceAvance.delete(id); }
-
-
-     private final PretService servicePret;
-
-    @PostMapping("/savePret")
-    public PretDTO savePret(@RequestBody PretDTO dto) { return servicePret.save(dto); }
-
-    @GetMapping("/findAllPrets")
-    public List<PretDTO> findAllPrets() { return servicePret.findAll(); }
-
-    @DeleteMapping("/deletePretById/{id}")
-    public void delete(@PathVariable Long id) { servicePret.delete(id); }
-
-      private final PaiementSalaireService servicePaiementSalaire;
-
-    @PostMapping("/genererPaiementSalaire")
-    public PaiementSalaireDTO genererPaiementSalaire(@RequestBody GenererPaieRequest request) {
-        return servicePaiementSalaire.genererPaie(request);
+    // Liste de toutes les paies
+    @GetMapping
+    public ResponseEntity<List<PaieDTO>> findAll() {
+        return ResponseEntity.ok(service.findAll());
     }
 
-    @PutMapping("/{id}/validerPaiementSalaire")
-    public PaiementSalaireDTO valider(@PathVariable Long id) {
-        return servicePaiementSalaire.validerPaie(id);
+    // Détail d'une paie
+    @GetMapping("/{id}")
+    public ResponseEntity<PaieDTO> findById(@PathVariable Long id) {
+        return ResponseEntity.ok(service.findById(id));
     }
 
-    @GetMapping("/findAllPaiementSalaire")
-    public List<PaiementSalaireDTO> findAllPaiementSalaire() {
-        return servicePaiementSalaire.findAll();
+    // Lister les paies d'un mois/année
+    @GetMapping("/periode")
+    public ResponseEntity<List<PaieDTO>> findByPeriode(
+            @RequestParam Integer mois,
+            @RequestParam Integer annee
+    ) {
+        return ResponseEntity.ok(service.findByPeriode(mois, annee));
     }
+
+    // Lister les paies d'un gardien
+    @GetMapping("/gardien/{gardienId}")
+    public ResponseEntity<List<PaieDTO>> findByGardien(@PathVariable Long gardienId) {
+        return ResponseEntity.ok(service.findByGardien(gardienId));
+    }
+
+    // Marquer une paie comme payée
+    @PutMapping("/{id}/payer")
+    public ResponseEntity<PaieDTO> payer(@PathVariable Long id) {
+        return ResponseEntity.ok(service.payer(id));
+    }
+
+    // Annuler une paie
+    @PutMapping("/{id}/annuler")
+    public ResponseEntity<PaieDTO> annuler(@PathVariable Long id) {
+        return ResponseEntity.ok(service.annuler(id));
+    }
+
+    // Supprimer une paie
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
+        service.delete(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/statistique")
+    public PaiementDashboardDTO getDashboard(
+            @RequestParam LocalDate dateDebut,
+            @RequestParam LocalDate dateFin
+    ) {
+        return service.statistique(dateDebut, dateFin);
+    }
+
 }

@@ -1,9 +1,11 @@
 package com.king.peace.enums;
 
 public enum TypePrime {
-   PERFORMANCE,
-    TRANSPORT,
+ PERFORMANCE,
+    PRESENCE,
     RISQUE,
+    TRANSPORT,
+    PANIER,
     EXCEPTIONNELLE,
     AUTRE
 }

@@ -3,6 +3,7 @@ package com.king.peace.Entitys;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
+import com.king.peace.enums.StatutPrime;
 import com.king.peace.enums.TypePrime;
 
 import jakarta.persistence.Column;
@@ -26,6 +27,7 @@ import lombok.Setter;
 @Table(name = "primes")
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
 public class Prime {
+   
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -34,20 +36,34 @@ public class Prime {
     @JoinColumn(name = "gardien_id", nullable = false)
     private Gardien gardien;
 
+    @Column(nullable = false)
+    private Double montant;
+
     @Enumerated(EnumType.STRING)
-    private TypePrime typePrime;
-
-    @Column(nullable = false)
-    private String libelle;
-
-    private double montant;
-
-    @Column(nullable = false)
-    private LocalDate datePrime;
-
-    private String observation;
-        @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Devise devise;
+
+    @Column(name = "date_prime", nullable = false)
+    private LocalDate datePrime;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "type_prime", nullable = false)
+    private TypePrime typePrime;
+
+    @Column(nullable = false, length = 500)
+    private String motif;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private StatutPrime statut;
+
+    @Column(name = "mois_concerne", nullable = false)
+    private Integer moisConcerne;
+
+    @Column(name = "annee_concerne", nullable = false)
+    private Integer anneeConcerne;
+
+    @Column(length = 1000)
+    private String observation;
 
 }

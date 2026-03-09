@@ -15,9 +15,11 @@ public interface GardienRepository extends JpaRepository<Gardien, Long> {
 
         List<Gardien> findByActifTrue();
 
-@Query(value = "SELECT COALESCE(SUM(salaire),0) FROM gardien WHERE devise = 0", nativeQuery = true)
+@Query(value = "SELECT COALESCE(SUM(salaire_base),0) FROM gardien WHERE devise = 0", nativeQuery = true)
 double countSalairesCDF();
 
-@Query(value = "SELECT COALESCE(SUM(salaire),0) FROM gardien WHERE devise = 1", nativeQuery = true)
+@Query(value = "SELECT COALESCE(SUM(salaire_base),0) FROM gardien WHERE devise = 1", nativeQuery = true)
 double countSalairesUSD();
+
+long countByActifTrue();
 }
