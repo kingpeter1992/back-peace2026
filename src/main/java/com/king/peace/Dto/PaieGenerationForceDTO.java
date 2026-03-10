@@ -11,8 +11,10 @@ import lombok.*;
 @Builder
 public class PaieGenerationForceDTO {
     private Long gardienId;
-    private Integer mois;
-    private Integer annee;
+//    private Integer mois;
+//    private Integer annee;
+private LocalDate datePaieDebut;
+private LocalDate datePaieFin;
     private LocalDate datePaie;
     private String observation;
 }

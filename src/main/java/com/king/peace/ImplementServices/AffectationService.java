@@ -4,7 +4,6 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.king.peace.Dao.AffectationRepository;
@@ -15,8 +14,6 @@ import com.king.peace.Entitys.Affectation;
 import com.king.peace.Entitys.Contrats;
 import com.king.peace.Entitys.Gardien;
 import com.king.peace.Entitys.StatutAffectation;
-import com.king.peace.Entitys.StatutGardien;
-
 import jakarta.transaction.Transactional;
 
 @Service

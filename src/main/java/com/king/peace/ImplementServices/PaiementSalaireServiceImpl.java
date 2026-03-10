@@ -4,14 +4,18 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
-
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+import java.time.YearMonth;
+import java.time.temporal.ChronoUnit;
 import org.springframework.stereotype.Service;
 
 import com.king.peace.Dao.AvanceSalaireRepository;
 import com.king.peace.Dao.GardienRepository;
 import com.king.peace.Dao.PaieLigneRepository;
 import com.king.peace.Dao.PaieRepository;
+import com.king.peace.Dao.PointageRepository;
 import com.king.peace.Dao.PretRepository;
 import com.king.peace.Dao.PrimeRepository;
 import com.king.peace.Dto.PaieDTO;
@@ -19,14 +23,17 @@ import com.king.peace.Dto.PaieGenerationForceDTO;
 import com.king.peace.Dto.PaieGenerationItemDTO;
 import com.king.peace.Dto.PaieGenerationMasseDTO;
 import com.king.peace.Dto.PaieGenerationMasseRequestDTO;
+import com.king.peace.Dto.PaieSuppressionItemDTO;
 import com.king.peace.Dto.PaiementDashboardDTO;
 import com.king.peace.Entitys.AvanceSalaire;
 import com.king.peace.Entitys.Devise;
 import com.king.peace.Entitys.Gardien;
 import com.king.peace.Entitys.Paie;
 import com.king.peace.Entitys.PaieLigne;
+import com.king.peace.Entitys.Pointage;
 import com.king.peace.Entitys.Pret;
 import com.king.peace.Entitys.Prime;
+import com.king.peace.Entitys.StatutPointage;
 import com.king.peace.Utiltys.PaieMapper;
 import com.king.peace.enums.SensLignePaie;
 import com.king.peace.enums.StatutAvance;
@@ -42,150 +49,12 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class PaiementSalaireServiceImpl  {
 
+
      private final GardienRepository  gardienRepository;
     private final PrimeRepository primeRepository;
     private final AvanceSalaireRepository avanceRepository;
     private final PretRepository pretRepository;
     private final PaieRepository paieRepository;
-    private final PaieLigneRepository paieLigneRepository;
-
-
-
-    @Transactional
-public PaieDTO genererPaie(Long gardienId, Integer mois, Integer annee) {
-
-
-//1. Charger le gardien actif
-    Gardien gardien = gardienRepository.findById(gardienId)
-            .orElseThrow(() -> new RuntimeException("Gardien introuvable"));
-
-
-            // 2. Vérifier si la paie de ce mois existe déjà pour ce gardien
-    if (paieRepository.existsByGardienIdAndMoisAndAnnee(gardienId, mois, annee)) {
-        throw new RuntimeException("La paie de ce mois existe déjà pour ce gardien");
-    }
-
-    if (!gardien.isActif()) {
-    throw new RuntimeException("Gardien inactif");
-}
-
-if (paieRepository.existsByGardienIdAndMoisAndAnnee(gardienId, mois, annee)) {
-    throw new RuntimeException("Paie déjà générée pour cette période");
-}
-
-if (gardien.getDevise() == null) {
-    throw new RuntimeException("Devise de salaire absente");
-}
-
-if (gardien.getSalaireBase() == 0 || gardien.getSalaireBase() <= 0) {
-    throw new RuntimeException("Salaire de base invalide");
-}
-    //récupérer salaire de base
-
-    //récupérer devise du salaire de base
-    Double salaireBase = gardien.getSalaireBase();
-    Devise devise = gardien.getDevise();
-
-
-//3. Charger les primes validées
-    List<Prime> primes = primeRepository.findPrimesPourPaie(gardienId, mois, annee, StatutPrime.VALIDEE, devise);
-  
-    //4. Charger les avances validées
-    List<AvanceSalaire> avances = avanceRepository.findAvancesPourPaie(gardienId, mois, annee, StatutAvance.VALIDEE, devise);
-    
-    //5. Charger les prêts en cours
-    List<Pret> prets = pretRepository.findPretsEnCoursPourPaie(gardienId, StatutPret.EN_COURS, devise);
-
-    //6. Calculer
-    double totalPrimes = primes.stream().mapToDouble(p -> p.getMontant() != 0 ? p.getMontant() : 0).sum();
-    double totalAvances = avances.stream().mapToDouble(a -> a.getMontant() != 0 ? a.getMontant() : 0).sum();
-    double totalPrets = prets.stream().mapToDouble(p -> p.getMensualite() != 0 ? p.getMensualite() : 0).sum();
-
-    double net = salaireBase + totalPrimes - totalAvances - totalPrets;
-
-
-    //Statut initial
-                Paie paie = new Paie();
-                paie.setGardien(gardien);
-                paie.setMois(mois);
-                paie.setAnnee(annee);
-                paie.setDatePaie(LocalDate.now());
-                paie.setSalaireBase(salaireBase);
-                paie.setDevise(devise);
-                paie.setTotalPrimes(totalPrimes);
-                paie.setTotalAvances(totalAvances);
-                paie.setTotalPrets(totalPrets);
-                paie.setAutresRetenues(0.0);
-                paie.setNetAPayer(net);
-                paie.setStatut(StatutPaie.BROUILLON);
-                paie.setNumeroBulletin(generateNumeroBulletin(gardien.getId(), mois, annee));
-
-                
-
-    Paie savedPaie = paieRepository.save(paie);
-
-    // Ligne salaire
-    paieLigneRepository.save(PaieLigne.builder()
-            .paie(savedPaie)
-            .typeLigne(TypeLignePaie.SALAIRE)
-            .referenceId(null)
-            .libelle("Salaire de base")
-            .montant(salaireBase)
-            .sens(SensLignePaie.GAIN)
-            .build());
-
-    // Lignes primes
-    for (Prime p : primes) {
-        paieLigneRepository.save(PaieLigne.builder()
-                .paie(savedPaie)
-                .typeLigne(TypeLignePaie.PRIME)
-                .referenceId(p.getId())
-                .libelle("Prime - " + p.getTypePrime())
-                .montant(p.getMontant())
-                .sens(SensLignePaie.GAIN)
-                .build());
-
-        p.setStatut(StatutPrime.PAYEE);
-    }
-
-    // Lignes avances
-    for (AvanceSalaire a : avances) {
-        paieLigneRepository.save(PaieLigne.builder()
-                .paie(savedPaie)
-                .typeLigne(TypeLignePaie.AVANCE)
-                .referenceId(a.getId())
-                .libelle("Avance sur salaire")
-                .montant(a.getMontant())
-                .sens(SensLignePaie.RETENUE)
-                .build());
-
-        a.setStatut(StatutAvance.DEDUITE);
-    }
-
-    // Lignes prêts
-    for (Pret pret : prets) {
-        double mensualite = pret.getMensualite() != 0 ? pret.getMensualite() : 0.0;
-
-        paieLigneRepository.save(PaieLigne.builder()
-                .paie(savedPaie)
-                .typeLigne(TypeLignePaie.PRET)
-                .referenceId(pret.getId())
-                .libelle("Mensualité prêt")
-                .montant(mensualite)
-                .sens(SensLignePaie.RETENUE)
-                .build());
-
-        double restant = (pret.getMontantRestant() != 0 ? pret.getMontantRestant() : 0.0) - mensualite;
-        if (restant <= 0) {
-            pret.setMontantRestant(0.0);
-            pret.setStatut(StatutPret.TERMINE);
-        } else {
-            pret.setMontantRestant(restant);
-        }
-    }
-
-    return PaieMapper.toDtoComplet(savedPaie);
-}
 
 
     public List<PaieDTO> findAll() {
@@ -200,20 +69,23 @@ if (gardien.getSalaireBase() == 0 || gardien.getSalaireBase() <= 0) {
         return PaieMapper.toDtoComplet(paie);
     }
 
-    public List<PaieDTO> findByPeriode(Integer mois, Integer annee) {
-        return paieRepository.findByMoisAndAnneeWithDetails(mois, annee)
-                .stream()
-                .map(PaieMapper::toDtoComplet)
-                .toList();
+ public List<PaieDTO> findByPeriode(LocalDate dateDebut, LocalDate dateFin) {
+
+    if (dateDebut == null || dateFin == null) {
+        throw new RuntimeException("La période est obligatoire");
     }
 
+    if (dateFin.isBefore(dateDebut)) {
+        throw new RuntimeException("La date de fin ne peut pas être antérieure à la date de début");
+    }
 
-    public String generateNumeroBulletin(Long id, Integer mois, Integer annee) {
-    LocalTime now = LocalTime.now();
-    String time = String.format("%02d%02d%02d", now.getHour(), now.getMinute(), now.getSecond());
-    String ref = String.format("%04d", id);
-    return "PAIE-" + annee + String.format("%02d", mois) + "-" + time + "-" + ref;
+    return paieRepository.findByDatePaieFinBetweenWithDetails(dateDebut, dateFin)
+            .stream()
+            .map(PaieMapper::toDtoComplet)
+            .toList();
 }
+
+
     public List<PaieDTO> findByGardien(Long gardienId) {
         return paieRepository.findByGardienIdWithDetails(gardienId)
                 .stream()
@@ -350,53 +222,74 @@ private double value(Double v) {
     return v != null ? v : 0;
 }
 
+  private final PaieUnitService paieUnitService;
 
-@Transactional
-public PaieGenerationMasseDTO genererPaieMasse(PaieGenerationMasseRequestDTO request) {
-
-    List<Gardien> gardiens = gardienRepository.findByActifTrue();
-    List<PaieGenerationItemDTO> details = new ArrayList<>();
-
-    int succes = 0;
-    int echecs = 0;
-
-    for (Gardien gardien : gardiens) {
-        try {
-            PaieDTO paie = genererPaie(gardien.getId(), request.getMois(), request.getAnnee());
-
-            details.add(PaieGenerationItemDTO.builder()
-                    .gardienId(gardien.getId())
-                    .gardienNom(gardien.getNom() + " " + gardien.getPrenom())
-                    .succes(true)
-                    .message("Paie générée avec succès")
-                    .paie(paie)
-                    .build());
-
-            succes++;
-
-        } catch (Exception e) {
-
-            details.add(PaieGenerationItemDTO.builder()
-                    .gardienId(gardien.getId())
-                    .gardienNom(gardien.getNom() + " " + gardien.getPrenom())
-                    .succes(false)
-                    .message(e.getMessage())
-                    .paie(null)
-                    .build());
-
-            echecs++;
-        }
+    public PaieDTO genererPaie(Long gardienId, LocalDate dateDebut, LocalDate dateFin) {
+        return paieUnitService.genererPaieUnitaire(gardienId, dateDebut, dateFin);
     }
 
-    return PaieGenerationMasseDTO.builder()
-            .mois(request.getMois())
-            .annee(request.getAnnee())
-            .totalGardiens(gardiens.size())
-            .totalSucces(succes)
-            .totalEchecs(echecs)
-            .details(details)
-            .build();
-}
+public PaieGenerationMasseDTO genererPaieMasse(PaieGenerationMasseRequestDTO request) {
+
+        if (request == null || request.getGardienIds() == null || request.getGardienIds().isEmpty()) {
+            throw new RuntimeException("Aucun gardien sélectionné");
+        }
+
+        if (request.getDateDebut() == null || request.getDateFin() == null) {
+            throw new RuntimeException("La période est obligatoire");
+        }
+
+        if (request.getDateFin().isBefore(request.getDateDebut())) {
+            throw new RuntimeException("La date de fin ne peut pas être antérieure à la date de début");
+        }
+
+        List<Gardien> gardiens = gardienRepository.findAllById(request.getGardienIds());
+        List<PaieGenerationItemDTO> details = new ArrayList<>();
+
+        int succes = 0;
+        int echecs = 0;
+
+        for (Gardien gardien : gardiens) {
+            try {
+                if (!gardien.isActif()) {
+                    throw new RuntimeException("Gardien inactif");
+                }
+
+                PaieDTO paie = paieUnitService.genererPaieUnitaire(
+                        gardien.getId(),
+                        request.getDateDebut(),
+                        request.getDateFin()
+                );
+
+                details.add(PaieGenerationItemDTO.builder()
+                        .gardienId(gardien.getId())
+                        .gardienNom(gardien.getNom() + " " + gardien.getPrenom())
+                        .succes(true)
+                        .message("Paie générée avec succès")
+                        .paie(paie)
+                        .build());
+                succes++;
+
+            } catch (Exception e) {
+                details.add(PaieGenerationItemDTO.builder()
+                        .gardienId(gardien.getId())
+                        .gardienNom(gardien.getNom() + " " + gardien.getPrenom())
+                        .succes(false)
+                        .message(e.getMessage())
+                        .paie(null)
+                        .build());
+                echecs++;
+            }
+        }
+
+        return PaieGenerationMasseDTO.builder()
+                .dateDebut(request.getDateDebut())
+                .dateFin(request.getDateFin())
+                .totalGardiens(gardiens.size())
+                .totalSucces(succes)
+                .totalEchecs(echecs)
+                .details(details)
+                .build();
+    }
 
 
 
@@ -409,102 +302,75 @@ public List<PaieDTO> annulerMasse(List<Long> ids) {
     }
 
     List<PaieDTO> resultats = new ArrayList<>();
-    
-
-    for (Long id : ids) {
-
-        Paie paie = paieRepository.findByIdWithDetails(id)
-                .orElseThrow(() -> new RuntimeException("Paie introuvable : " + id));
-
-                if (paie.getStatut() == StatutPaie.ANNULE) {
-    throw new RuntimeException("Cette paie est déjà annulée : " + id);
-}
-
-        // ❌ on ne peut annuler QUE si BROUILLON
-        if (paie.getStatut() != StatutPaie.BROUILLON) {
-            throw new RuntimeException(
-                    "Impossible d'annuler la paie " + id +
-                    " : seul le statut BROUILLON est annulable"
-            );
-        }
-
-        paie.setStatut(StatutPaie.ANNULE);
-
-        resultats.add(PaieMapper.toDtoComplet(paie));
-    }
-
-    return resultats;
-}
-
-@Transactional
-public List<PaieDTO> payerMasse(List<Long> ids) {
-
-    if (ids == null || ids.isEmpty()) {
-        throw new RuntimeException("Aucune paie sélectionnée");
-    }
-
-    List<PaieDTO> resultats = new ArrayList<>();
 
     for (Long id : ids) {
         Paie paie = paieRepository.findByIdWithDetails(id)
                 .orElseThrow(() -> new RuntimeException("Paie introuvable : " + id));
 
         if (paie.getStatut() == StatutPaie.ANNULE) {
-            throw new RuntimeException("Impossible de payer une paie annulée : " + id);
+            throw new RuntimeException("Cette paie est déjà annulée : " + id);
         }
 
-         if (paie.getStatut() != StatutPaie.VALIDE) {
-            throw new RuntimeException("Seules les paies VALIDES peuvent être payées : " + id);
-        }
-
-        if (paie.getStatut() == StatutPaie.PAYE) {
+        if (paie.getStatut() == StatutPaie.BROUILLON) {
+            paie.setStatut(StatutPaie.ANNULE);
             resultats.add(PaieMapper.toDtoComplet(paie));
             continue;
         }
 
-       
+        if (paie.getStatut() == StatutPaie.VALIDE || paie.getStatut() == StatutPaie.PAYE) {
 
-        Long gardienId = paie.getGardien().getId();
-        Integer mois = paie.getMois();
-        Integer annee = paie.getAnnee();
-        Devise devise = paie.getDevise();
+            if (paie.getPaieLignes() != null) {
+                for (PaieLigne ligne : paie.getPaieLignes()) {
 
-        List<Prime> primes = primeRepository.findPrimesPourPaie(
-                gardienId, mois, annee, StatutPrime.VALIDEE, devise
-        );
+                    if (ligne.getReferenceId() == null) continue;
 
-        List<AvanceSalaire> avances = avanceRepository.findAvancesPourPaie(
-                gardienId, mois, annee, StatutAvance.PAYEE, devise
-        );
+                    switch (ligne.getTypeLigne()) {
 
-        List<Pret> prets = pretRepository.findPretsEnCoursPourPaie(
-                gardienId, StatutPret.EN_COURS, devise
-        );
+                        case PRIME -> {
+                            Prime prime = primeRepository.findById(ligne.getReferenceId())
+                                    .orElseThrow(() -> new RuntimeException("Prime introuvable : " + ligne.getReferenceId()));
 
-        for (Prime p : primes) {
-            p.setStatut(StatutPrime.PAYEE);
-        }
+                            if (prime.getStatut() == StatutPrime.PAYEE) {
+                                prime.setStatut(StatutPrime.VALIDEE);
+                                primeRepository.save(prime);
+                            }
+                        }
 
-        for (AvanceSalaire a : avances) {
-            a.setStatut(StatutAvance.DEDUITE);
-        }
+                        case AVANCE -> {
+                            AvanceSalaire avance = avanceRepository.findById(ligne.getReferenceId())
+                                    .orElseThrow(() -> new RuntimeException("Avance introuvable : " + ligne.getReferenceId()));
 
-        for (Pret pret : prets) {
-            double mensualite = value(pret.getMensualite());
-            double restantAvant = value(pret.getMontantRestant());
-            double restantApres = restantAvant - mensualite;
+                            if (avance.getStatut() == StatutAvance.DEDUITE) {
+                                avance.setStatut(StatutAvance.VALIDEE);
+                                avanceRepository.save(avance);
+                            }
+                        }
 
-            if (restantApres <= 0) {
-                pret.setMontantRestant(0.0);
-                pret.setStatut(StatutPret.TERMINE);
-            } else {
-                pret.setMontantRestant(restantApres);
-                pret.setStatut(StatutPret.EN_COURS);
+                     case PRET -> {
+                                    Pret pret = pretRepository.findById(ligne.getReferenceId())
+                                            .orElseThrow(() -> new RuntimeException("Prêt introuvable : " + ligne.getReferenceId()));
+
+                                    double montantActuel = pret.getMontantRestant() != 0 ? pret.getMontantRestant() : 0.0;
+                                    double montantARestaurer = ligne.getMontant() != 0 ? ligne.getMontant() : 0.0;
+
+                                    pret.setMontantRestant(montantActuel + montantARestaurer);
+                                    pret.setStatut(StatutPret.EN_COURS);
+
+                                    pretRepository.save(pret);
+                                }
+
+                        default -> {
+                        }
+                    }
+                }
             }
+
+            paie.setStatut(StatutPaie.ANNULE);
+            resultats.add(PaieMapper.toDtoComplet(paie));
+            continue;
         }
 
-        paie.setStatut(StatutPaie.PAYE);
-        resultats.add(PaieMapper.toDtoComplet(paie));
+        throw new RuntimeException("Impossible d'annuler la paie : " + id);
     }
 
     return resultats;
@@ -524,10 +390,57 @@ public List<PaieDTO> validerMasse(List<Long> ids) {
                 .orElseThrow(() -> new RuntimeException("Paie introuvable : " + id));
 
         if (paie.getStatut() != StatutPaie.BROUILLON) {
-            throw new RuntimeException(
-                    "Impossible de valider la paie " + id +
-                    " : seul le statut BROUILLON peut être validé"
-            );
+            throw new RuntimeException("Seule une paie BROUILLON peut être validée : " + id);
+        }
+
+        if (paie.getPaieLignes() != null) {
+            for (PaieLigne ligne : paie.getPaieLignes()) {
+
+                if (ligne.getReferenceId() == null) continue;
+
+                switch (ligne.getTypeLigne()) {
+
+                    case PRIME -> {
+                        Prime prime = primeRepository.findById(ligne.getReferenceId())
+                                .orElseThrow(() -> new RuntimeException("Prime introuvable : " + ligne.getReferenceId()));
+
+                        if (prime.getStatut() == StatutPrime.VALIDEE) {
+                            prime.setStatut(StatutPrime.PAYEE);
+                            primeRepository.save(prime);
+                        }
+                    }
+
+                    case AVANCE -> {
+                        AvanceSalaire avance = avanceRepository.findById(ligne.getReferenceId())
+                                .orElseThrow(() -> new RuntimeException("Avance introuvable : " + ligne.getReferenceId()));
+
+                        if (avance.getStatut() == StatutAvance.VALIDEE) {
+                            avance.setStatut(StatutAvance.DEDUITE);
+                            avanceRepository.save(avance);
+                        }
+                    }
+
+                    case PRET -> {
+                        Pret pret = pretRepository.findById(ligne.getReferenceId())
+                                .orElseThrow(() -> new RuntimeException("Prêt introuvable : " + ligne.getReferenceId()));
+
+                        double restant = (pret.getMontantRestant() != 0 ? pret.getMontantRestant() : 0.0) - ligne.getMontant();
+
+                        if (restant <= 0) {
+                            pret.setMontantRestant(0.0);
+                            pret.setStatut(StatutPret.TERMINE);
+                        } else {
+                            pret.setMontantRestant(restant);
+                            pret.setStatut(StatutPret.EN_COURS);
+                        }
+
+                        pretRepository.save(pret);
+                    }
+
+                    default -> {
+                    }
+                }
+            }
         }
 
         paie.setStatut(StatutPaie.VALIDE);
@@ -537,139 +450,143 @@ public List<PaieDTO> validerMasse(List<Long> ids) {
     return resultats;
 }
 
-
 @Transactional
-public PaieDTO genererPaieForce(PaieGenerationForceDTO request) {
+public List<PaieDTO> payerMasse(List<Long> ids) {
 
-    if (request.getGardienId() == null) {
-        throw new RuntimeException("Gardien obligatoire");
-    }
-    if (request.getMois() == null || request.getMois() < 1 || request.getMois() > 12) {
-        throw new RuntimeException("Mois invalide");
-    }
-    if (request.getAnnee() == null) {
-        throw new RuntimeException("Année obligatoire");
-    }
-    if (request.getDatePaie() == null) {
-        throw new RuntimeException("Date de paie obligatoire");
+    if (ids == null || ids.isEmpty()) {
+        throw new RuntimeException("Aucune paie sélectionnée");
     }
 
-    Gardien gardien = gardienRepository.findById(request.getGardienId())
-            .orElseThrow(() -> new RuntimeException("Gardien introuvable"));
+    List<PaieDTO> resultats = new ArrayList<>();
 
-    if (!gardien.isActif()) {
-        throw new RuntimeException("Impossible de générer : gardien inactif");
+    for (Long id : ids) {
+        Paie paie = paieRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Paie introuvable : " + id));
+
+        if (paie.getStatut() != StatutPaie.VALIDE) {
+            throw new RuntimeException("Seule une paie VALIDEE peut être payée : " + id);
+        }
+
+        paie.setStatut(StatutPaie.PAYE);
+        resultats.add(PaieMapper.toDtoComplet(paie));
     }
 
-    if (paieRepository.existsByGardienIdAndMoisAndAnnee(
-            request.getGardienId(),
-            request.getMois(),
-            request.getAnnee()
-    )) {
-        throw new RuntimeException("Une paie existe déjà pour ce gardien sur cette période");
-    }
-
-    double salaireBase = value(gardien.getSalaireBase());
-    Devise devise = gardien.getDevise();
-
-    if (devise == null) {
-        throw new RuntimeException("Devise de salaire absente");
-    }
-
-    List<Prime> primes = primeRepository.findPrimesPourPaie(
-            gardien.getId(),
-            request.getMois(),
-            request.getAnnee(),
-            StatutPrime.VALIDEE,
-            devise
-    );
-
-    List<AvanceSalaire> avances = avanceRepository.findAvancesPourPaie(
-            gardien.getId(),
-            request.getMois(),
-            request.getAnnee(),
-            StatutAvance.PAYEE,
-            devise
-    );
-
-    List<Pret> prets = pretRepository.findPretsEnCoursPourPaie(
-            gardien.getId(),
-            StatutPret.EN_COURS,
-            devise
-    );
-
-    double totalPrimes = primes.stream().mapToDouble(p -> value(p.getMontant())).sum();
-    double totalAvances = avances.stream().mapToDouble(a -> value(a.getMontant())).sum();
-    double totalPrets = prets.stream().mapToDouble(p -> value(p.getMensualite())).sum();
-
-    double net = salaireBase + totalPrimes - totalAvances - totalPrets;
-
-    Paie paie = new Paie();
-    paie.setGardien(gardien);
-    paie.setMois(request.getMois());
-    paie.setAnnee(request.getAnnee());
-    paie.setDatePaie(request.getDatePaie());
-    paie.setSalaireBase(salaireBase);
-    paie.setDevise(devise);
-    paie.setTotalPrimes(totalPrimes);
-    paie.setTotalAvances(totalAvances);
-    paie.setTotalPrets(totalPrets);
-    paie.setAutresRetenues(0.0);
-    paie.setNetAPayer(net);
-    paie.setStatut(StatutPaie.BROUILLON);
-    paie.setObservation(request.getObservation());
-
-    Paie savedPaie = paieRepository.save(paie);
-
-    List<PaieLigne> lignes = new ArrayList<>();
-
-    lignes.add(PaieLigne.builder()
-            .paie(savedPaie)
-            .typeLigne(TypeLignePaie.SALAIRE)
-            .referenceId(null)
-            .libelle("Salaire de base")
-            .montant(salaireBase)
-            .sens(SensLignePaie.GAIN)
-            .build());
-
-    for (Prime p : primes) {
-        lignes.add(PaieLigne.builder()
-                .paie(savedPaie)
-                .typeLigne(TypeLignePaie.PRIME)
-                .referenceId(p.getId())
-                .libelle("Prime - " + p.getTypePrime())
-                .montant(value(p.getMontant()))
-                .sens(SensLignePaie.GAIN)
-                .build());
-    }
-
-    for (AvanceSalaire a : avances) {
-        lignes.add(PaieLigne.builder()
-                .paie(savedPaie)
-                .typeLigne(TypeLignePaie.AVANCE)
-                .referenceId(a.getId())
-                .libelle("Avance sur salaire")
-                .montant(value(a.getMontant()))
-                .sens(SensLignePaie.RETENUE)
-                .build());
-    }
-
-    for (Pret pret : prets) {
-        lignes.add(PaieLigne.builder()
-                .paie(savedPaie)
-                .typeLigne(TypeLignePaie.PRET)
-                .referenceId(pret.getId())
-                .libelle("Mensualité prêt")
-                .montant(value(pret.getMensualite()))
-                .sens(SensLignePaie.RETENUE)
-                .build());
-    }
-
-    paieLigneRepository.saveAll(lignes);
-
-    return paieRepository.findByIdWithDetails(savedPaie.getId())
-            .map(PaieMapper::toDtoComplet)
-            .orElseThrow(() -> new RuntimeException("Paie générée mais introuvable"));
+    return resultats;
 }
 
+@Transactional
+public void supprimerPaie(Long id) {
+
+    Paie paie = paieRepository.findByIdWithDetails(id)
+            .orElseThrow(() -> new RuntimeException("Paie introuvable : " + id));
+
+    if (paie.getStatut() == StatutPaie.VALIDE || paie.getStatut() == StatutPaie.PAYE) {
+        rollbackImpactsPaie(paie);
+    }
+
+    // supprimer les lignes d'abord si nécessaire
+    if (paie.getPaieLignes() != null && !paie.getPaieLignes().isEmpty()) {
+        paieLigneRepository.deleteAll(paie.getPaieLignes());
+    }
+
+    paieRepository.delete(paie);
+}
+    private final PaieLigneRepository paieLigneRepository;
+
+@Transactional
+public List<PaieSuppressionItemDTO> supprimerMasse(List<Long> ids) {
+
+    if (ids == null || ids.isEmpty()) {
+        throw new RuntimeException("Aucune paie sélectionnée");
+    }
+
+    List<PaieSuppressionItemDTO> resultats = new ArrayList<>();
+
+    for (Long id : ids) {
+        try {
+            Paie paie = paieRepository.findByIdWithDetails(id)
+                    .orElseThrow(() -> new RuntimeException("Paie introuvable : " + id));
+
+            if (paie.getStatut() != StatutPaie.BROUILLON && paie.getStatut() != StatutPaie.ANNULE) {
+                throw new RuntimeException(
+                        "Seules les paies BROUILLON ou ANNULE peuvent être supprimées"
+                );
+            }
+
+            if (paie.getPaieLignes() != null && !paie.getPaieLignes().isEmpty()) {
+                paieLigneRepository.deleteAll(paie.getPaieLignes());
+            }
+
+            paieRepository.delete(paie);
+
+            resultats.add(PaieSuppressionItemDTO.builder()
+                    .paieId(id)
+                    .succes(true)
+                    .message("Paie supprimée avec succès")
+                    .build());
+
+        } catch (Exception e) {
+            resultats.add(PaieSuppressionItemDTO.builder()
+                    .paieId(id)
+                    .succes(false)
+                    .message(e.getMessage())
+                    .build());
+        }
+    }
+
+    return resultats;
+}
+
+private void rollbackImpactsPaie(Paie paie) {
+
+    if (paie.getPaieLignes() == null || paie.getPaieLignes().isEmpty()) {
+        return;
+    }
+
+    for (PaieLigne ligne : paie.getPaieLignes()) {
+
+        if (ligne.getReferenceId() == null) {
+            continue;
+        }
+
+        switch (ligne.getTypeLigne()) {
+
+            case PRIME -> {
+                Prime prime = primeRepository.findById(ligne.getReferenceId())
+                        .orElseThrow(() -> new RuntimeException("Prime introuvable : " + ligne.getReferenceId()));
+
+                if (prime.getStatut() == StatutPrime.PAYEE) {
+                    prime.setStatut(StatutPrime.VALIDEE);
+                    primeRepository.save(prime);
+                }
+            }
+
+            case AVANCE -> {
+                AvanceSalaire avance = avanceRepository.findById(ligne.getReferenceId())
+                        .orElseThrow(() -> new RuntimeException("Avance introuvable : " + ligne.getReferenceId()));
+
+                if (avance.getStatut() == StatutAvance.DEDUITE) {
+                    avance.setStatut(StatutAvance.VALIDEE);
+                    avanceRepository.save(avance);
+                }
+            }
+
+            case PRET -> {
+                Pret pret = pretRepository.findById(ligne.getReferenceId())
+                        .orElseThrow(() -> new RuntimeException("Prêt introuvable : " + ligne.getReferenceId()));
+
+                double montantActuel = pret.getMontantRestant() != 0 ? pret.getMontantRestant() : 0.0;
+                double montantARestaurer = ligne.getMontant() != 0 ? ligne.getMontant() : 0.0;
+
+                pret.setMontantRestant(montantActuel + montantARestaurer);
+                pret.setStatut(StatutPret.EN_COURS);
+
+                pretRepository.save(pret);
+            }
+
+            default -> {
+            }
+        }
+    }
+}
 }

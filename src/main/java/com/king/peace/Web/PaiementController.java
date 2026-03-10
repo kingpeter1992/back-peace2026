@@ -15,9 +15,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import com.king.peace.Dto.PaieDTO;
-import com.king.peace.Dto.PaieGenerationForceDTO;
 import com.king.peace.Dto.PaieGenerationMasseDTO;
 import com.king.peace.Dto.PaieGenerationMasseRequestDTO;
+import com.king.peace.Dto.PaieSuppressionItemDTO;
 import com.king.peace.Dto.PaiementDashboardDTO;
 
 import com.king.peace.ImplementServices.PaiementSalaireServiceImpl;
@@ -36,10 +36,10 @@ public class PaiementController {
     @PostMapping("/generer")
     public ResponseEntity<PaieDTO> genererPaie(
             @RequestParam Long gardienId,
-            @RequestParam Integer mois,
-            @RequestParam Integer annee
+            @RequestParam LocalDate datePaieDebut,
+            @RequestParam LocalDate datePaieFin
     ) {
-        return ResponseEntity.ok(service.genererPaie(gardienId, mois, annee));
+        return ResponseEntity.ok(service.genererPaie(gardienId, datePaieDebut, datePaieFin));
     }
 
 @PostMapping("/generer-masse")
@@ -48,20 +48,25 @@ public ResponseEntity<PaieGenerationMasseDTO> genererPaieMasse(
 ) {
     return ResponseEntity.ok(service.genererPaieMasse(request));
 }
-@PostMapping("/generer-force")
-public ResponseEntity<PaieDTO> genererPaieForce(@RequestBody PaieGenerationForceDTO request) {
-    return ResponseEntity.ok(service.genererPaieForce(request));
-}
+
 
 @PutMapping("/valider-masse")
 public ResponseEntity<List<PaieDTO>> validerMasse(@RequestBody List<Long> ids) {
     return ResponseEntity.ok(service.validerMasse(ids));
 }
 
-@PutMapping("/payer-masse")
+@PutMapping("/paye-masse")
 public ResponseEntity<List<PaieDTO>> payerMasse(@RequestBody List<Long> ids) {
     return ResponseEntity.ok(service.payerMasse(ids));
 }
+
+//suppression
+
+ @DeleteMapping("/supprimer-masse")
+    public ResponseEntity<List<PaieSuppressionItemDTO>> supprimerMasse(@RequestBody List<Long> ids) {
+        return ResponseEntity.ok(service.supprimerMasse(ids));
+    }
+
 
 @PutMapping("/annuler-masse")
 public ResponseEntity<List<PaieDTO>> annulerMasse(@RequestBody List<Long> ids) {
@@ -83,10 +88,10 @@ public ResponseEntity<List<PaieDTO>> annulerMasse(@RequestBody List<Long> ids) {
     // Lister les paies d'un mois/année
     @GetMapping("/periode")
     public ResponseEntity<List<PaieDTO>> findByPeriode(
-            @RequestParam Integer mois,
-            @RequestParam Integer annee
+            @RequestParam LocalDate dateDebut,
+        @RequestParam LocalDate dateFin
     ) {
-        return ResponseEntity.ok(service.findByPeriode(mois, annee));
+        return ResponseEntity.ok(service.findByPeriode(dateDebut, dateFin));
     }
 
     // Lister les paies d'un gardien

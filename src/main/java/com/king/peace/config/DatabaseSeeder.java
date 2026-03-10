@@ -28,6 +28,7 @@ import com.king.peace.Entitys.StatutSessionCaisse;
 import com.king.peace.Entitys.TransactionCaisse;
 import com.king.peace.Entitys.TypeTransaction;
 import com.king.peace.Entitys.User;
+import com.king.peace.enums.Fonction;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -150,7 +151,7 @@ public class DatabaseSeeder implements CommandLineRunner {
             g.setTelephone1("08" + (1 + (i % 3)) + (2000000 + i * 123));
             g.setTelephone2("09" + 9 + (3000000 + i * 321));
 
-            g.setFonction("Agent de sécurité");
+            g.setFonction(Fonction.AGENT);
 
             Devise deviseG = (i % 2 == 0) ? Devise.USD : Devise.CDF;
             g.setDevise(deviseG);

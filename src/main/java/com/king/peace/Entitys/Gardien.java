@@ -10,7 +10,9 @@ import java.time.LocalDate;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.king.peace.enums.Departement;
+import com.king.peace.enums.Fonction;
+
 
 @Entity
 @NoArgsConstructor
@@ -25,7 +27,6 @@ public class Gardien {
     private String prenom;
     private String telephone1;
     private String telephone2;
-    private String fonction;
     private double salaire;
     private String adresse;
     private String genre;
@@ -38,6 +39,10 @@ public class Gardien {
     private LocalDate createdAt;
     private Devise devise;
     private boolean actif; // ✅ doit correspondre exactement au nom utilisé dans le repository
+    private Departement departement;
+    private Fonction fonction;
+    private Integer  nbrjours;
+    private String site;
 
 
 

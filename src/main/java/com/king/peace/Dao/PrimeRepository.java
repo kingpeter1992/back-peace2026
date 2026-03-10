@@ -5,8 +5,10 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import com.king.peace.Entitys.AvanceSalaire;
 import com.king.peace.Entitys.Devise;
 import com.king.peace.Entitys.Prime;
+import com.king.peace.enums.StatutAvance;
 import com.king.peace.enums.StatutPrime;
 
 import java.time.LocalDate;
@@ -78,6 +80,37 @@ List<Prime> findPrimesPourPaie(Long gardienId, Integer mois, Integer annee, Stat
     AND p.devise = :devise
 """)
 double sumPrimesPourPaie(
+        @Param("gardienId") Long gardienId,
+        @Param("dateDebut") LocalDate dateDebut,
+        @Param("dateFin") LocalDate dateFin,
+        @Param("statut") StatutPrime statut,
+        @Param("devise") Devise devise
+);
+@Query("""
+    select a
+    from AvanceSalaire a
+    where a.gardien.id = :gardienId
+      and a.statut = :statut
+      and a.devise = :devise
+      and a.dateAvance between :dateDebut and :dateFin
+""")
+List<AvanceSalaire> findAvancesPourPaieParPeriode(
+        @Param("gardienId") Long gardienId,
+        @Param("dateDebut") LocalDate dateDebut,
+        @Param("dateFin") LocalDate dateFin,
+        @Param("statut") StatutAvance statut,
+        @Param("devise") Devise devise
+);
+
+@Query("""
+    select p
+    from Prime p
+    where p.gardien.id = :gardienId
+      and p.statut = :statut
+      and p.devise = :devise
+      and p.datePrime between :dateDebut and :dateFin
+""")
+List<Prime> findPrimesPourPaieParPeriode(
         @Param("gardienId") Long gardienId,
         @Param("dateDebut") LocalDate dateDebut,
         @Param("dateFin") LocalDate dateFin,

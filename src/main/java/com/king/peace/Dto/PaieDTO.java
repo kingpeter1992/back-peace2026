@@ -23,9 +23,12 @@ public class PaieDTO {
     private Long id;
     private Long gardienId;
     private String gardienNom;
-    private Integer mois;
-    private Integer annee;
-    private LocalDate datePaie;
+  //  private Integer mois;
+//    private Integer annee;
+   private LocalDate datePaie;
+        private LocalDate datePaieDebut;
+    private LocalDate datePaieFin;
+
     private double salaireBase;
     private Devise devise;
     private double totalPrimes;

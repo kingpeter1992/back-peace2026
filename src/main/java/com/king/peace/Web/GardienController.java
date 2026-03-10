@@ -13,7 +13,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.king.peace.Dao.GardienPhotoRepository;
 import com.king.peace.Dao.GardienRepository;
 import com.king.peace.Dao.PointageRepository;
-import com.king.peace.Dao.TauxJournalierRepository;
 import com.king.peace.Dto.AffectationDto;
 import com.king.peace.Dto.GardienDetailsDto;
 import com.king.peace.Dto.GardienDto;
@@ -84,6 +83,11 @@ public class GardienController {
             dto.setDevise(savedGardien.getDevise());
             dto.setDateEmbauche(savedGardien.getDateEmbauche());
             dto.setCreatedAt(savedGardien.getCreatedAt());
+            dto.setDepartement(savedGardien.getDepartement());
+            dto.setFonction(savedGardien.getFonction());
+            dto.setSite(savedGardien.getSite());
+            dto.setNbrjours(savedGardien.getNbrjours());
+
 
             return ResponseEntity.ok(dto);
 
@@ -126,6 +130,11 @@ public class GardienController {
             existingGardien.setSalaireBase(updatedGardien.getSalaireBase());
             existingGardien.setDevise(updatedGardien.getDevise());
             existingGardien.setDateEmbauche(updatedGardien.getDateEmbauche());
+            existingGardien.setDepartement(updatedGardien.getDepartement());
+            existingGardien.setFonction(updatedGardien.getFonction());
+            existingGardien.setSite(updatedGardien.getSite());
+            existingGardien.setNbrjours(updatedGardien.getNbrjours());
+            
 
             // 3️⃣ Sauvegarder les modifications
             Gardien savedGardien = gardienService.update(id, existingGardien);
@@ -160,6 +169,10 @@ public class GardienController {
             dto.setDevise(savedGardien.getDevise());
             dto.setDateEmbauche(savedGardien.getDateEmbauche());
             dto.setCreatedAt(savedGardien.getCreatedAt());
+               dto.setDepartement(savedGardien.getDepartement());
+            dto.setFonction(savedGardien.getFonction());
+            dto.setSite(savedGardien.getSite());
+            dto.setNbrjours(savedGardien.getNbrjours());
 
             return ResponseEntity.ok(dto);
 
@@ -285,6 +298,10 @@ public ResponseEntity<List<Pointage>> pointerGardiensMasse(
     for (PointageMasseDTO dto : dtoList) {
         Gardien g = gardienRepository.findById(dto.getGardienId())
                 .orElseThrow(() -> new RuntimeException("Gardien non trouvé"));
+               
+        //deduidre le  moi et l'année a partir de la date 
+            Integer mois = dto.getDate().getMonthValue();
+            Integer annee = dto.getDate().getYear();
 
         Pointage p = Pointage.builder()
                 .gardien(g)
@@ -293,6 +310,8 @@ public ResponseEntity<List<Pointage>> pointerGardiensMasse(
                 .heureEntree(dto.getHeureEntree())
                 .heureSortie(dto.getHeureSortie())
                 .statut(dto.getStatuses())
+                .mois(mois)
+                .annee(annee)
                 .build();
 
         pointages.add(p);

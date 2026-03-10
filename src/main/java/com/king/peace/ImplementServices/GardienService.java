@@ -16,10 +16,8 @@ import com.king.peace.Dao.GardienPhotoRepository;
 import com.king.peace.Dao.GardienRepository;
 import com.king.peace.Dao.PlainteRepository;
 import com.king.peace.Dao.PointageRepository;
-import com.king.peace.Dao.RepositoryAgentFinanceHistory;
 import com.king.peace.Dao.TauxJournalierRepository;
 import com.king.peace.Dao.TransactionCaisseRepository;
-import com.king.peace.Dto.AgentFinanceHistoryDto;
 import com.king.peace.Dto.GardienDetailsDto;
 import com.king.peace.Dto.GardienDto;
 import com.king.peace.Dto.GardienStatsDto;
@@ -38,7 +36,6 @@ import com.king.peace.Entitys.StatutAffectation;
 import com.king.peace.Entitys.StatutGardien;
 import com.king.peace.Entitys.StatutPointage;
 import com.king.peace.Entitys.TauxJournalier;
-import com.king.peace.Entitys.TransactionCaisse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -65,7 +62,6 @@ public class GardienService {
     // CRUD GARDIEN
     // ==============================
     public Gardien create(Gardien existing) {
-        System.out.println("GardienService.create()" + existing.getStatut());
         existing.setCreatedAt(LocalDate.now());
         existing.setNom(existing.getNom().toUpperCase());
         existing.setPrenom(existing.getPrenom().toUpperCase());
@@ -76,6 +72,7 @@ public class GardienService {
         existing.setSalaireBase(existing.getSalaireBase());
         existing.setStatut(existing.getStatut());
         existing.setDateEmbauche(existing.getDateEmbauche());
+        existing.setNbrjours(existing.getNbrjours());
 
         if (existing.getStatut().equals(StatutGardien.ACTIF)) {
             existing.setActif(true);
@@ -106,6 +103,7 @@ public class GardienService {
         existing.setSalaireBase(g.getSalaireBase());
         existing.setStatut(g.getStatut());
         existing.setDateEmbauche(g.getDateEmbauche());
+        existing.setNbrjours(g.getNbrjours());
         return gardienRepository.save(existing);
     }
 
@@ -220,6 +218,11 @@ public class GardienService {
             dto.setCreatedAt(g.getCreatedAt());
             dto.setDevise(g.getDevise());
             dto.setStatut(g.getStatut());
+            dto.setNbrjours(g.getNbrjours());
+            dto.setDepartement(g.getDepartement());
+            dto.setSite(g.getSite());
+            dto.setFonction(g.getFonction());
+
 
             if (photo != null && photo.getPhoto() != null) {
                 dto.setPhotoBase64(Base64.getEncoder().encodeToString(photo.getPhoto()));
@@ -285,6 +288,8 @@ public class GardienService {
             dto.setCreatedAt(g.getCreatedAt());
             dto.setDevise(g.getDevise());
             dto.setStatut(g.getStatut());
+            dto.setNbrjours(g.getNbrjours());
+            dto.setDepartement(g.getDepartement());
 
             log.info("✅ Gardien OK");
 

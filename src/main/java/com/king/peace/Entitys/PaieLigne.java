@@ -52,5 +52,5 @@ public class PaieLigne {
 
     @ManyToOne(fetch = FetchType.LAZY)
 @JoinColumn(name = "paie_id", nullable = false)
-private Paie paie;
+private Paie paies;
 }

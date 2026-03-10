@@ -25,9 +25,11 @@ public class PaieMapper {
 //                .matricule(e.getMatricule())
                 .nom(e.getNom())
                 .prenom(e.getPrenom())
-                .fonction(e.getFonction())
                 .salaireBase(e.getSalaireBase())
                 .statut(e.getStatut())
+                .departement(e.getDepartement())
+                .site(e.getSite())
+                .fonction(e.getFonction())
                 .build();
     }
 
@@ -118,8 +120,8 @@ public class PaieMapper {
                                 ? paie.getGardien().getNom() + " " + paie.getGardien().getPrenom()
                                 : null
                 )
-                .mois(paie.getMois())
-                .annee(paie.getAnnee())
+                .datePaieDebut(paie.getDatePaieDebut())
+                .datePaieFin(paie.getDatePaieFin())
                 .datePaie(paie.getDatePaie())
                 .salaireBase(paie.getSalaireBase())
                 .devise(paie.getDevise())

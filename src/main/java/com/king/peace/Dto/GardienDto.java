@@ -7,6 +7,9 @@ import com.king.peace.Entitys.Devise;
 import com.king.peace.Entitys.Gardien;
 import com.king.peace.Entitys.GardienPhoto;
 import com.king.peace.Entitys.StatutGardien;
+import com.king.peace.enums.Departement;
+import com.king.peace.enums.Fonction;
+
 import lombok.Getter;
 import lombok.Setter;
 
@@ -18,13 +21,16 @@ public class GardienDto {
     private String prenom;
     private String telephone1;
     private String telephone2;
-    private String fonction;
     private double salaire;
     private String adresse;
     private String genre;
     private double salaireBase;
+    private Departement departement;
+    private Fonction fonction;
+    private String site;
+    private Integer  nbrjours;
 //    private double bonus;
-    private StatutGardien Statut;
+    private StatutGardien statut;
     private LocalDate dateEmbauche;
     private String email;
     private LocalDate dateNaissance;
@@ -38,15 +44,22 @@ public class GardienDto {
             Long id,
             String nom,
             String prenom,
-            String fonction,
+            Fonction fonction,
             double salaireBase,
-            StatutGardien statut
+            StatutGardien statut,
+            Departement departement,
+            String site,
+            Integer nbrjours
     ) {
         this.id = id;
         this.nom = nom;
         this.prenom = prenom;
         this.fonction = fonction;
         this.salaireBase = salaireBase;
+        this.departement = departement;
+        this.site = site;
+        this.statut = statut;
+        this.nbrjours = nbrjours;
       //  this.statut = statut;
     }
 
@@ -58,6 +71,10 @@ public class GardienDto {
         this.prenom = g.getPrenom();
         this.fonction = g.getFonction();
         this.salaireBase = g.getSalaireBase();
+        this.departement = g.getDepartement();
+        this.site = g.getSite();
+        this.statut = g.getStatut();
+        this.nbrjours = g.getNbrjours();
        // this.statut = g.getStatut();
 
         if (photo != null && photo.getPhoto() != null) {

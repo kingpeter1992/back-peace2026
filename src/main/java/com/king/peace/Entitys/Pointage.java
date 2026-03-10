@@ -30,6 +30,8 @@ public class Pointage {
     private LocalTime heureEntree;
     private LocalTime heureSortie;
     @ManyToOne private Gardien gardien;
+      private Integer mois;
+    private Integer annee;
 
      @Enumerated(EnumType.STRING)
     private StatutPointage statut;

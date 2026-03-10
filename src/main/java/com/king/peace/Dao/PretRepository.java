@@ -58,4 +58,19 @@ double sumMensualitePretsPourPaie(
         @Param("statut") StatutPret statut,
         @Param("devise") Devise devise
 );
+
+@Query("""
+    select p
+    from Pret p
+    where p.gardien.id = :gardienId
+      and p.statut = :statut
+      and p.devise = :devise
+      and p.dateDebut <= :dateFin
+""")
+List<Pret> findPretsEnCoursPourPaieParPeriode(
+        @Param("gardienId") Long gardienId,
+        @Param("dateFin") LocalDate dateFin,
+        @Param("statut") StatutPret statut,
+        @Param("devise") Devise devise
+);
 }

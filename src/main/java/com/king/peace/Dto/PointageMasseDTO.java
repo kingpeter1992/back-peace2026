@@ -17,4 +17,6 @@ public class PointageMasseDTO {
     private LocalTime heureEntree;
     private LocalTime heureSortie;
     private StatutPointage statuses;
+        private Integer mois;
+    private Integer annee;
 }

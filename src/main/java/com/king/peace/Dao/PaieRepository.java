@@ -12,8 +12,6 @@ import com.king.peace.Entitys.Paie;
 
 public interface PaieRepository  extends JpaRepository<Paie, Long>{
 
-    boolean existsByGardienIdAndMoisAndAnnee(Long gardienId, Integer mois, Integer annee);
-
     @Query("""
         SELECT DISTINCT p
         FROM Paie p
@@ -37,16 +35,6 @@ public interface PaieRepository  extends JpaRepository<Paie, Long>{
         FROM Paie p
         LEFT JOIN FETCH p.gardien
         LEFT JOIN FETCH p.paieLignes 
-        WHERE p.mois = :mois AND p.annee = :annee
-        ORDER BY p.id DESC
-    """)
-    List<Paie> findByMoisAndAnneeWithDetails(@Param("mois") Integer mois, @Param("annee") Integer annee);
-
-    @Query("""
-        SELECT DISTINCT p
-        FROM Paie p
-        LEFT JOIN FETCH p.gardien
-        LEFT JOIN FETCH p.paieLignes 
         WHERE p.gardien.id = :gardienId
         ORDER BY p.id DESC
     """)
@@ -61,5 +49,20 @@ public interface PaieRepository  extends JpaRepository<Paie, Long>{
 """)
 List<Paie> findAllByPeriode(@Param("dateDebut") LocalDate dateDebut,
                             @Param("dateFin") LocalDate dateFin);
+
+    boolean existsByGardienIdAndDatePaieDebutAndDatePaieFin(Long gardienId, LocalDate dateDebut, LocalDate dateFin);
+
+  @Query("""
+    select distinct p
+    from Paie p
+    left join fetch p.gardien g
+    left join fetch p.paieLignes l
+    where p.datePaieFin between :dateDebut and :dateFin
+    order by p.datePaieFin desc
+""")
+List<Paie> findByDatePaieFinBetweenWithDetails(
+        @Param("dateDebut") LocalDate dateDebut,
+        @Param("dateFin") LocalDate dateFin
+);
     
 }

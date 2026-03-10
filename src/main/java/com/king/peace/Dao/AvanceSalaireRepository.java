@@ -117,4 +117,20 @@ double sumAvancesPourPaie(
         @Param("statut") StatutAvance statut,
         @Param("devise") Devise devise
 );
+
+ @Query("""
+        select a
+        from AvanceSalaire a
+        where a.gardien.id = :gardienId
+          and a.statut = :statut
+          and a.devise = :devise
+          and a.dateAvance between :dateDebut and :dateFin
+    """)
+    List<AvanceSalaire> findAvancesPourPaieParPeriode(
+            @Param("gardienId") Long gardienId,
+            @Param("dateDebut") LocalDate dateDebut,
+            @Param("dateFin") LocalDate dateFin,
+            @Param("statut") StatutAvance statut,
+            @Param("devise") Devise devise
+    );
 }

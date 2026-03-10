@@ -5,12 +5,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import com.king.peace.Dto.AffectationDto;
 import com.king.peace.Dto.ContratsdTO;
-import com.king.peace.Entitys.Affectation;
 import com.king.peace.Entitys.Contrats;
-import com.king.peace.Entitys.Gardien;
-import com.king.peace.ImplementServices.AffectationService;
 import com.king.peace.ImplementServices.ContratService;
 
 import java.time.LocalDate;
@@ -24,7 +20,6 @@ import java.util.List;
 public class ContratController {
 
     private final ContratService contratService;
-    private final AffectationService affectationService;
 
     // ===========================
     // CRUD CONTRAT
