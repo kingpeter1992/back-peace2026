@@ -16,6 +16,7 @@ import com.king.peace.Dao.PointageRepository;
 import com.king.peace.Dto.AffectationDto;
 import com.king.peace.Dto.GardienDetailsDto;
 import com.king.peace.Dto.GardienDto;
+import com.king.peace.Dto.GardienPresenceSalaireDto;
 import com.king.peace.Dto.GardienStatsDto;
 import com.king.peace.Dto.PointageDto;
 import com.king.peace.Dto.PointageMasseDTO;
@@ -95,6 +96,14 @@ public class GardienController {
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
+    }
+
+ @GetMapping("/presences-salaires/periode")
+    public List<GardienPresenceSalaireDto> getPresenceSalaireParPeriode(
+            @RequestParam LocalDate dateDebut,
+            @RequestParam LocalDate dateFin
+    ) {
+        return pointagerepo.getPresenceSalaireParPeriode(dateDebut, dateFin);
     }
 
     // ===========================
@@ -320,6 +329,11 @@ public ResponseEntity<List<Pointage>> pointerGardiensMasse(
     return ResponseEntity.ok(pointageRepository.saveAll(pointages));
 }
 
+@PostMapping("/import-excel")
+public ResponseEntity<?> importExcel(@RequestBody List<GardienDto> gardiens) {
+    gardienService.importerDepuisExcel(gardiens);
+    return ResponseEntity.ok(Map.of("message", "Importation réussie"));
+}
 
    
   @GetMapping("/detailsgardien/{id}")

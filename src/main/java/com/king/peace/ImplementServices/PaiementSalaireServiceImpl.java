@@ -1,25 +1,17 @@
 package com.king.peace.ImplementServices;
 
 import java.time.LocalDate;
-import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-import java.time.YearMonth;
-import java.time.temporal.ChronoUnit;
 import org.springframework.stereotype.Service;
 
 import com.king.peace.Dao.AvanceSalaireRepository;
 import com.king.peace.Dao.GardienRepository;
 import com.king.peace.Dao.PaieLigneRepository;
 import com.king.peace.Dao.PaieRepository;
-import com.king.peace.Dao.PointageRepository;
 import com.king.peace.Dao.PretRepository;
 import com.king.peace.Dao.PrimeRepository;
 import com.king.peace.Dto.PaieDTO;
-import com.king.peace.Dto.PaieGenerationForceDTO;
 import com.king.peace.Dto.PaieGenerationItemDTO;
 import com.king.peace.Dto.PaieGenerationMasseDTO;
 import com.king.peace.Dto.PaieGenerationMasseRequestDTO;
@@ -30,17 +22,13 @@ import com.king.peace.Entitys.Devise;
 import com.king.peace.Entitys.Gardien;
 import com.king.peace.Entitys.Paie;
 import com.king.peace.Entitys.PaieLigne;
-import com.king.peace.Entitys.Pointage;
 import com.king.peace.Entitys.Pret;
 import com.king.peace.Entitys.Prime;
-import com.king.peace.Entitys.StatutPointage;
 import com.king.peace.Utiltys.PaieMapper;
-import com.king.peace.enums.SensLignePaie;
 import com.king.peace.enums.StatutAvance;
 import com.king.peace.enums.StatutPaie;
 import com.king.peace.enums.StatutPret;
 import com.king.peace.enums.StatutPrime;
-import com.king.peace.enums.TypeLignePaie;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -296,7 +284,6 @@ public PaieGenerationMasseDTO genererPaieMasse(PaieGenerationMasseRequestDTO req
 
 @Transactional
 public List<PaieDTO> annulerMasse(List<Long> ids) {
-
     if (ids == null || ids.isEmpty()) {
         throw new RuntimeException("Aucune paie sélectionnée");
     }
@@ -307,70 +294,16 @@ public List<PaieDTO> annulerMasse(List<Long> ids) {
         Paie paie = paieRepository.findByIdWithDetails(id)
                 .orElseThrow(() -> new RuntimeException("Paie introuvable : " + id));
 
-        if (paie.getStatut() == StatutPaie.ANNULE) {
-            throw new RuntimeException("Cette paie est déjà annulée : " + id);
+        StatutPaie statut = paie.getStatut();
+
+        if (statut != StatutPaie.BROUILLON) {
+            throw new RuntimeException(
+                "Impossible d'annuler la paie " + id + " : seul le statut BROUILLON est annulable"
+            );
         }
 
-        if (paie.getStatut() == StatutPaie.BROUILLON) {
-            paie.setStatut(StatutPaie.ANNULE);
-            resultats.add(PaieMapper.toDtoComplet(paie));
-            continue;
-        }
-
-        if (paie.getStatut() == StatutPaie.VALIDE || paie.getStatut() == StatutPaie.PAYE) {
-
-            if (paie.getPaieLignes() != null) {
-                for (PaieLigne ligne : paie.getPaieLignes()) {
-
-                    if (ligne.getReferenceId() == null) continue;
-
-                    switch (ligne.getTypeLigne()) {
-
-                        case PRIME -> {
-                            Prime prime = primeRepository.findById(ligne.getReferenceId())
-                                    .orElseThrow(() -> new RuntimeException("Prime introuvable : " + ligne.getReferenceId()));
-
-                            if (prime.getStatut() == StatutPrime.PAYEE) {
-                                prime.setStatut(StatutPrime.VALIDEE);
-                                primeRepository.save(prime);
-                            }
-                        }
-
-                        case AVANCE -> {
-                            AvanceSalaire avance = avanceRepository.findById(ligne.getReferenceId())
-                                    .orElseThrow(() -> new RuntimeException("Avance introuvable : " + ligne.getReferenceId()));
-
-                            if (avance.getStatut() == StatutAvance.DEDUITE) {
-                                avance.setStatut(StatutAvance.VALIDEE);
-                                avanceRepository.save(avance);
-                            }
-                        }
-
-                     case PRET -> {
-                                    Pret pret = pretRepository.findById(ligne.getReferenceId())
-                                            .orElseThrow(() -> new RuntimeException("Prêt introuvable : " + ligne.getReferenceId()));
-
-                                    double montantActuel = pret.getMontantRestant() != 0 ? pret.getMontantRestant() : 0.0;
-                                    double montantARestaurer = ligne.getMontant() != 0 ? ligne.getMontant() : 0.0;
-
-                                    pret.setMontantRestant(montantActuel + montantARestaurer);
-                                    pret.setStatut(StatutPret.EN_COURS);
-
-                                    pretRepository.save(pret);
-                                }
-
-                        default -> {
-                        }
-                    }
-                }
-            }
-
-            paie.setStatut(StatutPaie.ANNULE);
-            resultats.add(PaieMapper.toDtoComplet(paie));
-            continue;
-        }
-
-        throw new RuntimeException("Impossible d'annuler la paie : " + id);
+        paie.setStatut(StatutPaie.ANNULE);
+        resultats.add(PaieMapper.toDtoComplet(paie));
     }
 
     return resultats;

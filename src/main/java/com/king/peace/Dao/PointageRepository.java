@@ -37,4 +37,27 @@ List<Pointage> findByGardienIdAndPeriodeAndStatuts(
         @Param("dateDebut") LocalDate dateDebut,
         @Param("dateFin") LocalDate dateFin
 );
-}
+
+ @Query("""
+        select p.gardien.id, count(p)
+        from Pointage p
+        where p.statut = :statut
+          and p.date between :dateDebut and :dateFin
+        group by p.gardien.id
+    """)
+    List<Object[]> countPresenceByGardienBetweenDates(
+            @Param("dateDebut") LocalDate dateDebut,
+            @Param("dateFin") LocalDate dateFin
+    );
+  @Query("""
+        select p.gardien.id, count(p)
+        from Pointage p
+        where p.statut = :statut
+          and p.date between :dateDebut and :dateFin
+        group by p.gardien.id
+    """)
+    List<Object[]> countPresenceByGardienBetweenDates(
+            @Param("statut") StatutPointage statut,
+            @Param("dateDebut") LocalDate dateDebut,
+            @Param("dateFin") LocalDate dateFin
+    );}

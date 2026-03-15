@@ -55,7 +55,7 @@ public ResponseEntity<List<PaieDTO>> validerMasse(@RequestBody List<Long> ids) {
     return ResponseEntity.ok(service.validerMasse(ids));
 }
 
-@PutMapping("/paye-masse")
+@PutMapping("/payer-masse")
 public ResponseEntity<List<PaieDTO>> payerMasse(@RequestBody List<Long> ids) {
     return ResponseEntity.ok(service.payerMasse(ids));
 }

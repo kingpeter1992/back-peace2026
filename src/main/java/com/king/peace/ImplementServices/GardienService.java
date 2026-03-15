@@ -27,6 +27,7 @@ import com.king.peace.Dto.ReponseDto;
 import com.king.peace.Dto.TransactionCaisseDto;
 import com.king.peace.Entitys.Affectation;
 import com.king.peace.Entitys.Contrats;
+import com.king.peace.Entitys.Devise;
 import com.king.peace.Entitys.Gardien;
 import com.king.peace.Entitys.GardienPhoto;
 import com.king.peace.Entitys.Plaintes;
@@ -36,6 +37,9 @@ import com.king.peace.Entitys.StatutAffectation;
 import com.king.peace.Entitys.StatutGardien;
 import com.king.peace.Entitys.StatutPointage;
 import com.king.peace.Entitys.TauxJournalier;
+import com.king.peace.enums.Departement;
+import com.king.peace.enums.Fonction;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -455,4 +459,36 @@ public class GardienService {
         return dto;
     }
 
+ public void importerDepuisExcel(List<GardienDto> dtos) {
+        List<Gardien> gardiens = dtos.stream().map(this::mapToEntity).toList();
+        gardienRepository.saveAll(gardiens);
+    }
+
+
+        private Gardien mapToEntity(GardienDto dto) {
+        Gardien g = new Gardien();
+
+        g.setNom(dto.getNom());
+        g.setPrenom(dto.getPrenom());
+        g.setTelephone1(dto.getTelephone1());
+        g.setTelephone2(dto.getTelephone2());
+        g.setSalaire(dto.getSalaire());
+        g.setAdresse(dto.getAdresse());
+        g.setGenre(dto.getGenre());
+        g.setSalaireBase(dto.getSalaireBase());
+        g.setStatut(dto.getStatut());
+        g.setDateEmbauche(dto.getDateEmbauche());
+        g.setEmail(dto.getEmail());
+        g.setDateNaissance(dto.getDateNaissance());
+        g.setCreatedAt(LocalDate.now());
+        g.setDevise(dto.getDevise());
+        g.setActif(true);
+        g.setDepartement(dto.getDepartement());
+        g.setFonction(dto.getFonction());
+        g.setNbrjours(dto.getNbrjours());
+        g.setSite(dto.getSite());
+
+        return g;
+    }
+    
 }
