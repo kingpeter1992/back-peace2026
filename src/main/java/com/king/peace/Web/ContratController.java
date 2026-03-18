@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.*;
 
 import com.king.peace.Dto.ContratsdTO;
 import com.king.peace.Entitys.Contrats;
+import com.king.peace.Entitys.SiteClients;
 import com.king.peace.ImplementServices.ContratService;
 
 import java.time.LocalDate;
@@ -63,5 +64,17 @@ public ResponseEntity<ContratsdTO> updateContrat(@PathVariable Long contratId,
         return contratService.findContratsActifsEnCours(LocalDate.now());
     }
     
+
+    // inser un site 
+    @PostMapping("/createsite")
+    public ResponseEntity<?> createSite(@RequestBody SiteClients site) {
+        return ResponseEntity.ok(contratService.createSite(site));
+    }
+
+    @GetMapping("/listsite")
+    public List<?> listSite() {
+        return contratService.getAllList();
+    }
+
     
 }

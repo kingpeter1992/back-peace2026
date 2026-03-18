@@ -244,7 +244,7 @@ public class GardienService {
         GardienStatsDto stats = new GardienStatsDto();
         stats.setTotalGardiens(gardienRepository.count());
         stats.setActifs(gardienRepository.countByStatut(StatutGardien.ACTIF));
-        stats.setInactifs(gardienRepository.countByStatut(StatutGardien.BLOQUE));
+        stats.setInactifs(gardienRepository.countByStatut(StatutGardien.INACTIF));
         double salaireCDF = gardienRepository.countSalairesCDF();
         double salaireUSD = gardienRepository.countSalairesUSD();
         stats.setSalaireCDF(salaireCDF);

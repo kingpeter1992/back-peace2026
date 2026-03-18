@@ -8,9 +8,11 @@ import org.springframework.stereotype.Service;
 
 import com.king.peace.Dao.ClientRepository;
 import com.king.peace.Dao.ContratRepository;
+import com.king.peace.Dao.SiteclientRepository;
 import com.king.peace.Dto.ContratsdTO;
 import com.king.peace.Entitys.Client;
 import com.king.peace.Entitys.Contrats;
+import com.king.peace.Entitys.SiteClients;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -20,7 +22,9 @@ import lombok.RequiredArgsConstructor;
 @Transactional
 public class ContratService {
      private final ContratRepository contratRepository;
-    private final ClientRepository clientRepository;
+     private final ClientRepository clientRepository;
+    private final SiteclientRepository siteClientService;
+
 
     public ContratsdTO createContrat(ContratsdTO contrat, Long clientId) {
 
@@ -156,6 +160,16 @@ public List<ContratsdTO> findContratsActifsEnCours(LocalDate today) {
                 })
                 .collect(Collectors.toList());
     }
+
+public SiteClients createSite(SiteClients site) {
+    // TODO Auto-generated method stub
+    return siteClientService.save(site);
+
+}
+
+public List<?> getAllList() {
+    return siteClientService.findAll();
+}
 }
 
 
