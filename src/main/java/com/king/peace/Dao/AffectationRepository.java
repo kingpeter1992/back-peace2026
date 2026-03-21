@@ -22,20 +22,17 @@ public interface AffectationRepository extends JpaRepository<Affectation,Long>{
     boolean existsByGardienId(Long gardienId);
 
     boolean existsByGardienAndActiveTrue(Gardien gardien);
-  List<Affectation> findByContratIdAndActiveTrue(Long contratId);
+  List<Affectation> findByGardienIdAndActiveTrue(Long gardienId);
 
     // ✅ Vérifie qu’il existe une affectation ACTIVE du gardien sur un contrat de ce client
-    boolean existsByGardienIdAndContrat_Client_IdAndStatut(
-            Long gardienId,
-            Long clientId,
-            StatutAffectation statut
-    );
+ boolean existsByGardienIdAndStatut(
+        Long gardienId,
+        StatutAffectation statut
+);
 
-    @Query("""
-       SELECT COUNT(a)
-       FROM Affectation a
-       WHERE a.contrat.id = :contratId
-       AND a.active = true
-       """)
-Long countActiveByContratId(Long contratId);
+ Long countActiveByContratId(Long id);
+
+ boolean existsByGardienIdAndClientIdAndStatut(Long gardienId, Long clientId, StatutAffectation active);
+
+
 }

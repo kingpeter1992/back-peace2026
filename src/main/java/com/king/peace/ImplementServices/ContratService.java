@@ -129,7 +129,7 @@ public ContratsdTO updateContrat(Long contratId, ContratsdTO updated) {
 
 public List<ContratsdTO> findContratsActifsEnCours(LocalDate today) {
         List<Contrats> contrats = contratRepository
-                .findByActiveTrueAndDateDebutBeforeAndDateFinAfter(today, today);
+                .findByActiveTrue();
 
         return contrats.stream()
                 .map(c -> {

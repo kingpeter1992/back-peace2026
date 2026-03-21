@@ -17,6 +17,7 @@ public class AffectationDto {
     private LocalDate dateFin;
     private Long gardienId;
     private Long contratId;
+    private Long clientId;
     private StatutAffectation statut;
     private LocalDate dateAffectation;
     private String  description;

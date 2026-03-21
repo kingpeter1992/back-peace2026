@@ -130,7 +130,7 @@ public class GardienService {
 
         Affectation a = Affectation.builder()
                 .gardien(g)
-                .contrat(contrat)
+          //      .contrat(contrat)
                 .dateDebut(LocalDate.now())
                 .statut(StatutAffectation.ACTIVE)
                 .build();

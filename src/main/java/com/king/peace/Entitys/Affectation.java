@@ -26,11 +26,15 @@ public class Affectation {
     @ManyToOne
     @JoinColumn(name = "gardien_id")
     private Gardien gardien;
+    private Long contratId;
+        private Long clientId;
 
-    // Contrat lié
-    @ManyToOne
-    @JoinColumn(name = "contrats_id")
-    private Contrats contrat;
+
+
+    // // Contrat lié
+    // @ManyToOne
+    // @JoinColumn(name = "contrats_id")
+    // private Contrats contrat;
 
     // Statut de l'affectation
     @Enumerated(EnumType.STRING)

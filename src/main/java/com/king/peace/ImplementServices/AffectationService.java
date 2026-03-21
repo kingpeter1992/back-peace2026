@@ -37,15 +37,16 @@ public class AffectationService {
         return affectations.stream()
                 .map(a -> AffectationDto.builder()
                         .id(a.getId())
-                        .dateDebut(a.getContrat().getDateDebut())
-                        .dateFin(a.getContrat().getDateFin())
+                        .dateDebut(a.getDateDebut())
+                        .site(a.getSite())
+                 //       .dateFin(a.getContrat().getDateFin())
                         .gardienId(a.getGardien().getId())
-                        .contratId(a.getContrat().getId())
+                 //       .contratId(a.getContrat().getId())
                         .statut(a.getStatut())
                         .dateAffectation(a.getDateAffectation())
                         .description(a.getDescription())
                         .active(a.isActive())
-                        .refContrats(a.getContrat().getRefContrats())
+                  //      .refContrats(a.getContrat().getRefContrats())
                         .build())
                 .collect(Collectors.toList());
     }
@@ -56,15 +57,15 @@ public class AffectationService {
                 .orElseThrow(() -> new RuntimeException("Affectation not found"));
         return AffectationDto.builder()
                 .id(a.getId())
-                .dateDebut(a.getContrat().getDateDebut())
-                .dateFin(a.getContrat().getDateFin())
+                .dateDebut(a.getDateDebut())
+                .dateFin(a.getDateFin())
                 .gardienId(a.getGardien().getId())
-                .contratId(a.getContrat().getId())
+        //   .contratId(a.getContrat().getId())
                 .statut(a.getStatut())
                 .dateAffectation(a.getDateAffectation())
                 .description(a.getDescription())
                 .active(a.isActive())
-                .refContrats(a.getContrat().getRefContrats())
+        //        .refContrats(a.getContrat().getRefContrats())
                 .build();
     }
 
@@ -93,7 +94,7 @@ public class AffectationService {
     }
 
 
-    Long nombreAffecte = affectationRepository.countActiveByContratId(contrat.getId());
+    Long nombreAffecte = affectationRepository.countActiveByContratId(dto.getContratId());
 
 if (nombreAffecte >= contrat.getNombreGardiens()) {
     throw new RuntimeException("Le nombre d'affectations pour ce contrat est limité");
@@ -103,13 +104,16 @@ if (nombreAffecte >= contrat.getNombreGardiens()) {
     // Créer l'affectation
     Affectation a = Affectation.builder()
             .gardien(gardien)
-            .contrat(contrat)
+//            .contrat(contrat)
             .dateAffectation(LocalDate.now())
+            .contratId(dto.getContratId())
             .dateDebut(contrat.getDateDebut())
             .dateFin(contrat.getDateFin())
             .statut(dto.getStatut() != null ? dto.getStatut() : StatutAffectation.ACTIVE)
             .description(dto.getDescription())
             .active(true)
+            .clientId(contrat.getClient().getId())
+                .contratId(dto.getContratId())
             .site(contrat.getZone())
             .build();
 
@@ -119,15 +123,15 @@ if (nombreAffecte >= contrat.getNombreGardiens()) {
     // Retourner le DTO
     return AffectationDto.builder()
             .id(saved.getId())
-            .dateDebut(saved.getContrat().getDateDebut())
-            .dateFin(saved.getContrat().getDateFin())
+            .dateDebut(saved.getDateDebut())
+            .dateFin(saved.getDateFin())
             .gardienId(saved.getGardien().getId())
-            .contratId(saved.getContrat().getId())
+//    .contratId(saved.getContrat().getId())
+                .clientId(saved.getClientId())
             .statut(saved.getStatut())
             .dateAffectation(saved.getDateAffectation())
             .description(saved.getDescription())
             .active(saved.isActive())
-            .refContrats(saved.getContrat().getRefContrats())
             .build();
 }
 
@@ -154,16 +158,16 @@ if (nombreAffecte >= contrat.getNombreGardiens()) {
 
         return AffectationDto.builder()
                 .id(saved.getId())
-                .dateDebut(saved.getContrat().getDateDebut())
-                .dateFin(saved.getContrat().getDateFin())
+                .dateDebut(saved.getDateDebut())
+                .dateFin(saved.getDateFin())
                 .gardienId(saved.getGardien().getId())
-                .contratId(saved.getContrat().getId())
+           //     .contratId(saved.getContrat().getId())
                 .statut(saved.getStatut())
                 .dateAffectation(saved.getDateAffectation())
 
                 .description(saved.getDescription())
                 .active(saved.isActive())
-                .refContrats(saved.getContrat().getRefContrats())
+         //       .refContrats(saved.getContrat().getRefContrats())
                 .build();
     }
 
@@ -171,14 +175,14 @@ if (nombreAffecte >= contrat.getNombreGardiens()) {
 
     public boolean existsByGardienIdAndContrat_Client_IdAndStatut(Long gardienId, Long clientId,
             StatutAffectation active) {
-                return affectationRepository.existsByGardienIdAndContrat_Client_IdAndStatut(gardienId, clientId, active);
+                return affectationRepository.existsByGardienIdAndClientIdAndStatut(gardienId,clientId, active);
     }
 
     public Long countActiveByContratId(Long id) {
 
-        return affectationRepository.countActiveByContratId(id);
+        return null;
     }
 
    
-}
+} 
 

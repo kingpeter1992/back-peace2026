@@ -54,7 +54,7 @@ public class Contrats {
     @OneToMany(mappedBy = "contrats") 
     private List<Facture> factures;
 
-      // Gardiens affectés via Affectation
-    @OneToMany(mappedBy = "contrat", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Affectation> affectations;
+    //   // Gardiens affectés via Affectation
+    // @OneToMany(mappedBy = "contrat", cascade = CascadeType.ALL, orphanRemoval = true)
+    // private List<Affectation> affectations;
 }

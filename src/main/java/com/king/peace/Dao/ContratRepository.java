@@ -20,6 +20,8 @@ public interface ContratRepository extends  JpaRepository<Contrats,Long>{
 
 // Récupère tous les contrats actifs dont la dateDebut <= start et dateFin >= end
     List<Contrats> findByActiveTrueAndDateDebutBeforeAndDateFinAfter(LocalDate start, LocalDate end);
+
+
     List<Contrats> findByActiveTrue();
     boolean existsByRefContrats(String refContrats);
     List<Contrats> findByClient_Id(Long clientId);
